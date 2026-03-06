@@ -3,31 +3,45 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* ── Curated bold pastel palette ── */
-  --bg:         #f7f3ff;          /* soft lilac white                  */
-  --coral:      #ff7b6b;          /* punchy coral-red                  */
-  --coral-lt:   #ffe4e0;
-  --lemon:      #ffe566;          /* zesty lemon yellow                */
-  --lemon-lt:   #fff9d6;
-  --mint:       #6edfc8;          /* fresh mint                        */
-  --mint-lt:    #d6f5ef;
-  --lilac:      #c9b8ff;          /* soft lilac                        */
-  --lilac-lt:   #ede8ff;
-  --sky:        #74c7f5;          /* clear sky blue                    */
-  --ink:        #1a1028;          /* near-black with purple warmth     */
-  --ink2:       #4a3f60;
-  --ink3:       #9585b0;
+  /* ── Rich pastel palette ── */
+  --bg:          #f0eaff;
+  --coral:       #ffb3a7;
+  --coral-dk:    #e8826e;
+  --coral-lt:    #ffe8e4;
+  --lemon:       #ffe882;
+  --lemon-dk:    #d4b800;
+  --lemon-lt:    #fff8cc;
+  --mint:        #8eecd8;
+  --mint-dk:     #3dbda3;
+  --mint-lt:     #d4f7f0;
+  --lilac:       #d4bfff;
+  --lilac-dk:    #8a68d4;
+  --lilac-lt:    #ede5ff;
+  --sky:         #a8d8f0;
+  --sky-dk:      #5aaad4;
+  --sky-lt:      #ddf0fc;
+  --peach:       #ffc89a;
+  --peach-dk:    #e0924a;
+  --peach-lt:    #fff0e0;
+  --blush:       #ffb8d0;
+  --blush-dk:    #d4608c;
+  --blush-lt:    #ffe4ef;
+
+  /* ── Ink ── */
+  --ink:         #1e1428;
+  --ink2:        #4a3f60;
+  --ink3:        #9080b0;
 
   /* ── UI aliases ── */
-  --text:       #1a1028;
-  --text2:      #4a3f60;
-  --muted:      #9585b0;
-  --border:     #e8e0f5;
-  --border2:    #d4c8f0;
-  --surface:    #ffffff;
-  --plum:       #7c5cbf;
-  --plum-lt:    #c9b8ff;
-  --paper:      #f0ebff;
+  --text:        #1e1428;
+  --text2:       #4a3f60;
+  --muted:       #9080b0;
+  --border:      #ddd0f8;
+  --border2:     #c8b8f0;
+  --surface:     #ffffff;
+  --plum:        #8a68d4;
+  --plum-lt:     #d4bfff;
+  --paper:       #ede5ff;
 
   --font-display: 'Instrument Serif', Georgia, serif;
   --font-ui:      'Syne', sans-serif;
@@ -42,56 +56,76 @@ html, body {
   min-height: 100vh;
 }
 
-::selection { background: #ffe566; color: #1a1028; }
+::selection { background: #ffe882; color: #1e1428; }
 textarea    { font-family: var(--font-ui); }
 
 ::-webkit-scrollbar       { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--lilac); border-radius: 99px; }
 
-/* ── Animations ── */
-@keyframes spin {
-  to { transform: rotate(360deg); }
+/* ── 3D card utility ── */
+.card-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes popIn {
-  0%   { opacity: 0; transform: scale(0.85); }
-  70%  { transform: scale(1.04); }
-  100% { opacity: 1; transform: scale(1); }
-}
-@keyframes worm {
-  0%   { left: -40%; width: 40%; }
-  50%  { left: 30%;  width: 60%; }
-  100% { left: 110%; width: 40%; }
-}
-@keyframes blob {
-  0%,100% { border-radius: 60% 40% 70% 30% / 50% 60% 40% 70%; }
-  25%     { border-radius: 40% 60% 30% 70% / 70% 30% 60% 40%; }
-  50%     { border-radius: 70% 30% 60% 40% / 40% 70% 30% 60%; }
-  75%     { border-radius: 30% 70% 40% 60% / 60% 40% 70% 30%; }
-}
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes bar {
-  0%,100% { transform: scaleY(0.3); }
-  50%     { transform: scaleY(1); }
-}
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+.card-3d:hover {
+  transform: perspective(800px) rotateX(-3deg) rotateY(2deg) translateY(-4px);
 }
 
-.bar { animation: bar 0.8s ease-in-out infinite; transform-origin: bottom; }
-.bar:nth-child(1) { animation-delay: 0.00s; }
-.bar:nth-child(2) { animation-delay: 0.10s; }
-.bar:nth-child(3) { animation-delay: 0.20s; }
-.bar:nth-child(4) { animation-delay: 0.30s; }
-.bar:nth-child(5) { animation-delay: 0.15s; }
-.bar:nth-child(6) { animation-delay: 0.25s; }
-.bar:nth-child(7) { animation-delay: 0.05s; }
-.bar:nth-child(8) { animation-delay: 0.35s; }
+/* ── Animations ── */
+@keyframes spin    { to { transform: rotate(360deg); } }
+@keyframes float {
+  0%,100% { transform: translateY(0px); }
+  50%     { transform: translateY(-7px); }
+}
+@keyframes floatB {
+  0%,100% { transform: translateY(0px) rotate(-2deg); }
+  50%     { transform: translateY(-5px) rotate(2deg); }
+}
+@keyframes worm {
+  0%   { left:-40%; width:40%; }
+  50%  { left:30%;  width:60%; }
+  100% { left:110%; width:40%; }
+}
+@keyframes blob {
+  0%,100% { border-radius:60% 40% 70% 30%/50% 60% 40% 70%; }
+  25%     { border-radius:40% 60% 30% 70%/70% 30% 60% 40%; }
+  50%     { border-radius:70% 30% 60% 40%/40% 70% 30% 60%; }
+  75%     { border-radius:30% 70% 40% 60%/60% 40% 70% 30%; }
+}
+@keyframes fade-up {
+  from { opacity:0; transform:translateY(16px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes shimmer {
+  0%   { background-position:0% center; }
+  100% { background-position:300% center; }
+}
+@keyframes marquee {
+  from { transform:translateX(0); }
+  to   { transform:translateX(-50%); }
+}
+@keyframes bar {
+  0%,100% { transform:scaleY(0.3); }
+  50%     { transform:scaleY(1); }
+}
+@keyframes orb-drift {
+  0%,100% { transform:translate(0,0) scale(1); }
+  33%     { transform:translate(-30px,20px) scale(1.06); }
+  66%     { transform:translate(20px,-15px) scale(0.95); }
+}
+@keyframes pop-in {
+  0%   { opacity:0; transform:scale(0.7) translateY(12px); }
+  70%  { transform:scale(1.06) translateY(-2px); }
+  100% { opacity:1; transform:scale(1) translateY(0); }
+}
+
+.bar { animation:bar 0.8s ease-in-out infinite; transform-origin:bottom; }
+.bar:nth-child(1){animation-delay:0.00s}
+.bar:nth-child(2){animation-delay:0.10s}
+.bar:nth-child(3){animation-delay:0.20s}
+.bar:nth-child(4){animation-delay:0.30s}
+.bar:nth-child(5){animation-delay:0.15s}
+.bar:nth-child(6){animation-delay:0.25s}
+.bar:nth-child(7){animation-delay:0.05s}
+.bar:nth-child(8){animation-delay:0.35s}
