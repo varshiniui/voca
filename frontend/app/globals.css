@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cream:   #faf8f5;
+  --paper:   #f4f1ec;
+  --border:  #e8e2d9;
+  --border2: #d6cfc4;
+  --plum:    #4a2d4e;
+  --plum2:   #5e484e;
+  --plum-lt: #87554b;
+  --muted:   #987b60;
+  --text:    #15100e;
+  --text2:   #5e402d;
+}
+
+html, body {
+  background: var(--cream);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+::selection { background: rgba(74,45,78,0.12); }
+
+textarea { font-family: 'Outfit', sans-serif; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+/* Animations */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.25; }
+}
+
+@keyframes worm {
+  0%   { left: -40%; width: 40%; }
+  50%  { left: 30%;  width: 60%; }
+  100% { left: 110%; width: 40%; }
+}
+
+/* Card base */
+.card {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+/* Hidden audio */
+.hidden { display: none; }
