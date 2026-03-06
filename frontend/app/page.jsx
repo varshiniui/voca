@@ -17,7 +17,6 @@ export default function Home() {
   const [hasRecorded, setHasRecorded] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [noteCount,   setNoteCount]   = useState(0)
-  const [activeNav,   setActiveNav]   = useState('home')
 
   const handleLoading = (v) => {
     setLoading(v)
@@ -100,7 +99,7 @@ export default function Home() {
         /* ── Scroll body ── */
         .scroll{
           flex:1;overflow-y:auto;
-          padding:4px 18px 110px;
+          padding:4px 18px 40px;
           display:flex;flex-direction:column;gap:14px;
         }
         .scroll::-webkit-scrollbar{display:none}
@@ -259,34 +258,7 @@ export default function Home() {
         .res-btn:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 #1a0f2e}
         .res-body{padding:16px 20px 20px}
 
-        /* ── Bottom nav ── */
-        .bnav{
-          position:fixed;bottom:0;left:50%;transform:translateX(-50%);
-          width:100%;max-width:430px;
-          background:white;border-top:2.5px solid #1a0f2e;
-          padding:10px 20px 26px;
-          display:flex;justify-content:space-around;
-          z-index:50;
-        }
-        .ni{
-          display:flex;flex-direction:column;align-items:center;gap:3px;
-          cursor:pointer;opacity:.38;transition:all .15s;flex:1;
-        }
-        .ni.on{opacity:1}
-        .ni:hover{opacity:.8;transform:translateY(-2px)}
-        .ni-icon{
-          width:44px;height:38px;border-radius:14px;
-          display:flex;align-items:center;justify-content:center;
-          font-size:18px;
-        }
-        .ni.on .ni-icon{
-          background:#1a0f2e;
-          box-shadow:2px 2px 0 rgba(26,15,46,.25);
-        }
-        .ni-lbl{
-          font-family:'Unbounded',sans-serif;
-          font-size:7px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1a0f2e;
-        }
+
 
         /* ── Waveform bars (rainbow) ── */
         .wave-row{display:flex;align-items:center;gap:3px;height:32px}
@@ -319,10 +291,6 @@ export default function Home() {
         </div>
 
         {/* ── Status ── */}
-        <div className="status">
-          <span>9:41</span>
-          <span>●●● 🔋</span>
-        </div>
 
         {/* ── Top nav ── */}
         <div className="topnav">
@@ -462,34 +430,6 @@ export default function Home() {
           )}
 
         </div>{/* /scroll */}
-
-        {/* ── Bottom nav ── */}
-        <nav className="bnav">
-          {[
-            {id:'home', icon:'🏠',  label:'Home'},
-            {id:'rec',  icon:'🎙', label:'Record', accent:true},
-            {id:'notes',icon:'📋', label:'Notes'},
-          ].map(({id,icon,label,accent})=>(
-            <motion.div key={id}
-              className={`ni ${activeNav===id?'on':''}`}
-              onClick={()=>{ setActiveNav(id); if(id==='notes') setHistoryOpen(true) }}
-              whileTap={{scale:.88}}
-            >
-              <div className="ni-icon"
-                style={accent && activeNav!==id ? {
-                  background:'#ff8c69',border:'2px solid #1a0f2e',
-                  borderRadius:'50%',boxShadow:'2px 2px 0 #1a0f2e',fontSize:16,
-                } : {}}
-              >
-                {accent
-                  ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={activeNav===id?'#faf5eb':'white'} strokeWidth="2.2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
-                  : icon
-                }
-              </div>
-              <span className="ni-lbl">{label}</span>
-            </motion.div>
-          ))}
-        </nav>
 
       </div>
 
