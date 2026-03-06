@@ -1,104 +1,66 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Caveat:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* ── Pastel journal palette ── */
-  --bg:         #fef6f0;
-  --bg2:        #fff8f5;
-  --surface:    #fffaf7;
-  --surface2:   #fdeee6;
+  /* ── Curated bold pastel palette ── */
+  --bg:         #f7f3ff;          /* soft lilac white                  */
+  --coral:      #ff7b6b;          /* punchy coral-red                  */
+  --coral-lt:   #ffe4e0;
+  --lemon:      #ffe566;          /* zesty lemon yellow                */
+  --lemon-lt:   #fff9d6;
+  --mint:       #6edfc8;          /* fresh mint                        */
+  --mint-lt:    #d6f5ef;
+  --lilac:      #c9b8ff;          /* soft lilac                        */
+  --lilac-lt:   #ede8ff;
+  --sky:        #74c7f5;          /* clear sky blue                    */
+  --ink:        #1a1028;          /* near-black with purple warmth     */
+  --ink2:       #4a3f60;
+  --ink3:       #9585b0;
 
-  --rose:       #f4a7b9;
-  --rose-lt:    #fbd5df;
-  --rose-dk:    #d4728a;
-  --peach:      #f9c49a;
-  --peach-lt:   #fde8d0;
-  --sage:       #a8c5a0;
-  --sage-lt:    #d6e9d2;
-  --lavender:   #c4b0d8;
-  --lavender-lt:#ede5f5;
-  --sky:        #a8cfe0;
-  --butter:     #f7e4a0;
+  /* ── UI aliases ── */
+  --text:       #1a1028;
+  --text2:      #4a3f60;
+  --muted:      #9585b0;
+  --border:     #e8e0f5;
+  --border2:    #d4c8f0;
+  --surface:    #ffffff;
+  --plum:       #7c5cbf;
+  --plum-lt:    #c9b8ff;
+  --paper:      #f0ebff;
 
-  /* ── Ink / text ── */
-  --ink:        #3d2a1e;
-  --ink2:       #7a5c4f;
-  --ink3:       #b08878;
-
-  /* ── UI aliases used by Recorder.jsx & ResultCard.jsx ── */
-  --text:       #3d2a1e;
-  --text2:      #7a5c4f;
-  --muted:      #b08878;
-  --border:     #f0ddd4;
-  --border2:    #e8c9bc;
-  --plum:       #d4728a;
-  --plum-lt:    #f4a7b9;
-  --paper:      #fdeee6;
-
-  --shadow-sm:  0 2px 12px rgba(212,114,138,0.10);
-  --shadow-md:  0 6px 28px rgba(212,114,138,0.14);
-  --shadow-lg:  0 12px 48px rgba(212,114,138,0.18);
-
-  --font-display: 'Playfair Display', Georgia, serif;
-  --font-hand:    'Caveat', cursive;
-  --font-body:    'Lato', sans-serif;
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-ui:      'Syne', sans-serif;
 }
 
 html, body {
   background: var(--bg);
   color: var(--ink);
-  font-family: var(--font-body);
+  font-family: var(--font-ui);
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
 }
 
-/* Parchment noise texture */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.025;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 200px 200px;
-}
+::selection { background: #ffe566; color: #1a1028; }
+textarea    { font-family: var(--font-ui); }
 
-/* Scattered polka dots */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-image:
-    radial-gradient(circle, #fbd5df 1.5px, transparent 1.5px),
-    radial-gradient(circle, #d6e9d2 1px,   transparent 1px),
-    radial-gradient(circle, #ede5f5 1px,   transparent 1px);
-  background-size: 80px 80px, 55px 55px, 120px 120px;
-  background-position: 0 0, 27px 27px, 60px 10px;
-  opacity: 0.55;
-}
-
-::selection { background: #fbd5df; color: #d4728a; }
-textarea { font-family: var(--font-body); }
-
-::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar       { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #fbd5df; border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: var(--lilac); border-radius: 99px; }
 
 /* ── Animations ── */
-@keyframes spin    { to { transform: rotate(360deg); } }
-
-@keyframes float {
-  0%,100% { transform: translateY(0px) rotate(-1deg); }
-  50%     { transform: translateY(-8px) rotate(1deg); }
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
-@keyframes floatSlow {
-  0%,100% { transform: translateY(0px); }
-  50%     { transform: translateY(-4px); }
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes popIn {
+  0%   { opacity: 0; transform: scale(0.85); }
+  70%  { transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
 }
 @keyframes worm {
   0%   { left: -40%; width: 40%; }
@@ -115,30 +77,16 @@ textarea { font-family: var(--font-body); }
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position:  200% center; }
-}
-@keyframes petals {
-  0%   { transform: translateY(-10px) rotate(0deg);   opacity: 0; }
-  10%  { opacity: 0.8; }
-  90%  { opacity: 0.4; }
-  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-}
-@keyframes pulse-ring {
-  0%   { transform: scale(1);   opacity: 0.5; }
-  100% { transform: scale(1.8); opacity: 0; }
-}
-@keyframes inkDrop {
-  from { transform: scale(0) rotate(-5deg); opacity: 0; }
-  to   { transform: scale(1) rotate(0deg);  opacity: 1; }
-}
 @keyframes bar {
-  0%,100% { transform: scaleY(0.35); }
+  0%,100% { transform: scaleY(0.3); }
   50%     { transform: scaleY(1); }
 }
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
 
-.bar { animation: bar 0.85s ease-in-out infinite; transform-origin: bottom; }
+.bar { animation: bar 0.8s ease-in-out infinite; transform-origin: bottom; }
 .bar:nth-child(1) { animation-delay: 0.00s; }
 .bar:nth-child(2) { animation-delay: 0.10s; }
 .bar:nth-child(3) { animation-delay: 0.20s; }
@@ -147,11 +95,3 @@ textarea { font-family: var(--font-body); }
 .bar:nth-child(6) { animation-delay: 0.25s; }
 .bar:nth-child(7) { animation-delay: 0.05s; }
 .bar:nth-child(8) { animation-delay: 0.35s; }
-
-.petal {
-  position: fixed;
-  pointer-events: none;
-  z-index: 0;
-  animation: petals linear infinite;
-  opacity: 0;
-}

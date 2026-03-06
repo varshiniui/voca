@@ -1,17 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Recorder from './components/Recorder'
 import ResultCard from './components/ResultCard'
 import HistoryPanel from './components/HistoryPanel'
 
-/* ── tiny floating petal component ── */
-function Petal({ emoji, style }) {
-  return <div className="petal" style={style}>{emoji}</div>
-}
-
-const PETALS = ['🌸','🌷','✿','❀','🍃','🌿','💮','🫧']
+/* Spring presets */
+const spring = { type: 'spring', stiffness: 260, damping: 22 }
+const springFast = { type: 'spring', stiffness: 380, damping: 28 }
 
 export default function Home() {
   const [results, setResults]         = useState(null)
@@ -20,23 +17,6 @@ export default function Home() {
   const [hasRecorded, setHasRecorded] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [noteCount, setNoteCount]     = useState(0)
-  const [petals, setPetals]           = useState([])
-
-  /* generate falling petals once on mount */
-  useEffect(() => {
-    const items = Array.from({ length: 18 }, (_, i) => ({
-      id: i,
-      emoji: PETALS[i % PETALS.length],
-      style: {
-        left:             `${Math.random() * 100}%`,
-        fontSize:         `${10 + Math.random() * 12}px`,
-        animationDuration:`${6 + Math.random() * 10}s`,
-        animationDelay:   `${Math.random() * 8}s`,
-        opacity:          0,
-      },
-    }))
-    setPetals(items)
-  }, [])
 
   const handleLoading = (v) => {
     setLoading(v)
@@ -55,313 +35,352 @@ export default function Home() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,600&family=Caveat:wght@400;600;700&family=Lato:wght@300;400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap');
 
-        /* ── Layout ── */
         .page {
           min-height: 100vh;
-          background: #fef6f0;
-          font-family: 'Lato', sans-serif;
+          background: #f7f3ff;
+          font-family: 'Syne', sans-serif;
           position: relative;
           overflow-x: hidden;
         }
 
-        /* ── Watercolour blobs ── */
+        /* ── Big bold background blobs — one per brand colour ── */
         .blob {
           position: fixed;
           border-radius: 50%;
           pointer-events: none;
           z-index: 0;
-          filter: blur(60px);
-          animation: blobDrift ease-in-out infinite;
+          filter: blur(80px);
         }
-        .blob-rose    { width:420px;height:420px;top:-120px;right:-100px;background:rgba(244,167,185,0.22);animation-duration:14s; }
-        .blob-peach   { width:300px;height:300px;bottom:0;left:-80px;background:rgba(249,196,154,0.18);animation-duration:18s;animation-direction:reverse; }
-        .blob-sage    { width:260px;height:260px;top:40%;right:-60px;background:rgba(168,197,160,0.15);animation-duration:20s;animation-delay:4s; }
-        .blob-lav     { width:200px;height:200px;top:20%;left:5%;background:rgba(196,176,216,0.15);animation-duration:16s;animation-delay:2s; }
+        .blob-a { width:500px;height:500px;top:-160px;right:-140px;  background:#ffe566;opacity:0.22; }
+        .blob-b { width:400px;height:400px;bottom:-80px;left:-120px; background:#6edfc8;opacity:0.18; }
+        .blob-c { width:320px;height:320px;top:38%;left:55%;          background:#ff7b6b;opacity:0.13; }
+        .blob-d { width:280px;height:280px;top:12%;left:-60px;        background:#c9b8ff;opacity:0.20; }
 
-        @keyframes blobDrift {
-          0%,100% { transform:translate(0,0) scale(1); }
-          33%     { transform:translate(-18px,14px) scale(1.04); }
-          66%     { transform:translate(12px,-10px) scale(0.96); }
+        /* ── Marquee ticker ── */
+        .ticker-wrap {
+          overflow: hidden;
+          border-top: 2px solid #1a1028;
+          border-bottom: 2px solid #1a1028;
+          background: #1a1028;
+          padding: 10px 0;
+          position: relative;
+          z-index: 2;
+        }
+        .ticker-inner {
+          display: flex;
+          width: max-content;
+          animation: marquee 18s linear infinite;
+        }
+        .ticker-item {
+          font-family: 'Syne', sans-serif;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: #f7f3ff;
+          padding: 0 32px;
+          white-space: nowrap;
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+        .ticker-dot {
+          width: 5px; height: 5px;
+          border-radius: 50%;
+          display: inline-block;
+          flex-shrink: 0;
         }
 
         /* ── Nav ── */
         .nav {
           position: sticky; top: 0; z-index: 30;
           display: flex; align-items: center; justify-content: space-between;
-          padding: 14px 24px;
-          background: rgba(254,246,240,0.82);
+          padding: 16px 28px;
+          background: rgba(247,243,255,0.88);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
-          border-bottom: 1px solid rgba(244,167,185,0.2);
+          border-bottom: 2px solid #1a1028;
         }
 
-        /* ── Logo ── */
-        .logo-wrap { display:flex; align-items:center; gap:8px; }
-        .logo-icon {
-          width:34px; height:34px; border-radius:50%;
-          background: linear-gradient(135deg,#f4a7b9,#f9c49a);
-          display:flex; align-items:center; justify-content:center;
-          font-size:16px; box-shadow:0 3px 14px rgba(244,167,185,0.4);
-          animation: floatSlow 3s ease-in-out infinite;
+        .logo {
+          font-family: 'Instrument Serif', serif;
+          font-style: italic;
+          font-size: 26px;
+          color: #1a1028;
+          letter-spacing: -0.02em;
         }
-        .logo-text {
-          font-family:'Playfair Display',serif;
-          font-style:italic;
-          font-size:22px;
-          color:#3d2a1e;
-          letter-spacing:-0.01em;
-        }
-        .logo-text span {
-          background: linear-gradient(135deg,#d4728a,#f9c49a);
-          -webkit-background-clip:text;
-          -webkit-text-fill-color:transparent;
-          background-clip:text;
+        .logo b {
+          font-style: normal;
+          font-family: 'Syne', sans-serif;
+          font-weight: 800;
+          background: #ffe566;
+          padding: 1px 6px;
+          border-radius: 6px;
+          color: #1a1028;
+          font-size: 14px;
+          vertical-align: middle;
+          margin-left: 6px;
+          letter-spacing: 0.04em;
         }
 
-        /* ── Notes button ── */
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+
         .notes-btn {
-          display:flex; align-items:center; gap:7px;
-          padding:8px 18px;
-          background:white;
-          border:1.5px solid rgba(244,167,185,0.4);
-          border-radius:99px;
-          font-family:'Lato',sans-serif;
-          font-size:13px; font-weight:700;
-          color:#d4728a;
-          cursor:pointer;
-          box-shadow:0 2px 14px rgba(212,114,138,0.12);
-          transition:all 0.25s;
-          position:relative;
+          display: flex; align-items: center; gap: 8px;
+          padding: 9px 20px;
+          background: #1a1028;
+          border: 2px solid #1a1028;
+          border-radius: 99px;
+          font-family: 'Syne', sans-serif;
+          font-size: 13px; font-weight: 700;
+          color: #f7f3ff;
+          cursor: pointer;
+          transition: all 0.18s;
+          letter-spacing: 0.02em;
         }
         .notes-btn:hover {
-          border-color:#f4a7b9;
-          box-shadow:0 5px 22px rgba(212,114,138,0.2);
-          transform:translateY(-2px);
+          background: #ffe566;
+          color: #1a1028;
+          border-color: #1a1028;
+          transform: translateY(-2px);
+          box-shadow: 3px 3px 0 #1a1028;
         }
         .badge {
-          min-width:18px; height:18px; border-radius:99px; padding:0 5px;
-          background:linear-gradient(135deg,#d4728a,#f9c49a);
-          color:white; font-size:9px; font-weight:800;
-          display:inline-flex; align-items:center; justify-content:center;
+          min-width: 18px; height: 18px;
+          border-radius: 99px; padding: 0 5px;
+          background: #ff7b6b;
+          color: white; font-size: 9px; font-weight: 800;
+          display: inline-flex; align-items: center; justify-content: center;
         }
 
         /* ── Body ── */
         .body {
-          position:relative; z-index:1;
-          max-width:540px; margin:0 auto;
-          padding:28px 20px 100px;
-          display:flex; flex-direction:column; gap:20px;
+          position: relative; z-index: 1;
+          max-width: 560px; margin: 0 auto;
+          padding: 40px 22px 100px;
+          display: flex; flex-direction: column; gap: 20px;
         }
 
         /* ── Hero ── */
-        .hero { text-align:center; padding:8px 0 6px; }
+        .hero { text-align: center; padding: 4px 0 8px; }
 
-        .hero-tag {
-          display:inline-flex; align-items:center; gap:7px;
-          padding:6px 18px; border-radius:99px; margin-bottom:20px;
-          background:linear-gradient(135deg,rgba(244,167,185,0.15),rgba(249,196,154,0.15));
-          border:1.5px solid rgba(244,167,185,0.35);
-          font-family:'Caveat',cursive;
-          font-size:15px; font-weight:600; color:#d4728a;
+        .hero-eyebrow {
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 6px 18px;
+          background: #ffe566;
+          border: 2px solid #1a1028;
+          border-radius: 99px;
+          margin-bottom: 22px;
+          font-size: 11px; font-weight: 800;
+          color: #1a1028;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          box-shadow: 3px 3px 0 #1a1028;
         }
 
         .hero h1 {
-          font-family:'Playfair Display',serif;
-          font-size:clamp(32px,9vw,52px);
-          font-weight:500;
-          line-height:1.15;
-          color:#3d2a1e;
-          letter-spacing:-0.02em;
-          margin-bottom:14px;
+          font-family: 'Instrument Serif', serif;
+          font-size: clamp(38px, 10vw, 58px);
+          font-weight: 400;
+          line-height: 1.12;
+          color: #1a1028;
+          letter-spacing: -0.025em;
+          margin-bottom: 16px;
         }
         .hero h1 em {
-          font-style:italic;
-          background:linear-gradient(135deg,#d4728a 0%,#f9c49a 50%,#a8c5a0 100%);
-          -webkit-background-clip:text;
-          -webkit-text-fill-color:transparent;
-          background-clip:text;
-          background-size:200% 100%;
-          animation:shimmer 4s linear infinite;
-        }
-        @keyframes shimmer {
-          0%  { background-position:-200% center; }
-          100%{ background-position: 200% center; }
+          font-style: italic;
+          color: #7c5cbf;
         }
 
         .hero-sub {
-          font-size:15px; color:#b08878;
-          font-family:'Caveat',cursive;
-          font-weight:500; line-height:1.6; margin-bottom:20px;
-          letter-spacing:0.01em;
+          font-size: 14px;
+          color: #4a3f60;
+          font-weight: 500;
+          line-height: 1.7;
+          margin-bottom: 24px;
+          letter-spacing: 0.01em;
         }
 
-        /* ── Pill tags ── */
-        .pills { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+        /* ── Feature pills ── */
+        .pills { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
         .pill {
-          display:inline-flex; align-items:center; gap:5px;
-          padding:6px 16px; border-radius:99px;
-          font-family:'Caveat',cursive;
-          font-size:14px; font-weight:600;
-          cursor:default;
-          transition:all 0.2s;
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 7px 16px;
+          border: 2px solid #1a1028;
+          border-radius: 99px;
+          font-size: 12px; font-weight: 700;
+          letter-spacing: 0.04em;
+          cursor: default;
+          transition: transform 0.18s, box-shadow 0.18s;
         }
-        .pill:hover { transform:translateY(-3px) rotate(-1deg); }
-        .pill-rose   { background:#fdeef3; color:#d4728a; border:1.5px solid #fbd5df; }
-        .pill-peach  { background:#fef4ec; color:#c47d40; border:1.5px solid #fde8d0; }
-        .pill-sage   { background:#eef6ec; color:#5a8a52; border:1.5px solid #d6e9d2; }
-        .pill-lav    { background:#f2eef8; color:#7a5c9a; border:1.5px solid #ede5f5; }
+        .pill:hover {
+          transform: translateY(-3px);
+          box-shadow: 3px 3px 0 #1a1028;
+        }
+        .pill-a { background: #ffe4e0; color: #1a1028; }
+        .pill-b { background: #fff9d6; color: #1a1028; }
+        .pill-c { background: #d6f5ef; color: #1a1028; }
+        .pill-d { background: #ede8ff; color: #1a1028; }
 
-        /* ── Journal card ── */
-        .journal-card {
-          background:white;
-          border:1.5px solid rgba(244,167,185,0.25);
-          border-radius:28px;
-          padding:clamp(24px,5vw,36px);
-          box-shadow:
-            0 1px 0 rgba(255,255,255,0.9) inset,
-            0 6px 32px rgba(212,114,138,0.10),
-            0 2px 6px rgba(212,114,138,0.06);
-          position:relative; overflow:hidden;
+        /* ── Main recorder card ── */
+        .rec-card {
+          background: white;
+          border: 2px solid #1a1028;
+          border-radius: 28px;
+          padding: clamp(26px,5vw,38px);
+          box-shadow: 6px 6px 0 #1a1028;
+          position: relative; overflow: hidden;
         }
-        /* coloured top rule */
-        .journal-card::before {
-          content:'';
-          position:absolute; top:0; left:0; right:0; height:3px;
-          background:linear-gradient(90deg,#f4a7b9,#f9c49a,#a8c5a0,#c4b0d8,#f4a7b9);
-          background-size:300% 100%;
-          animation:shimmer 5s linear infinite;
+        /* thick colour stripe top */
+        .rec-card::before {
+          content: '';
+          position: absolute; top: 0; left: 0; right: 0; height: 5px;
+          background: linear-gradient(90deg, #ff7b6b, #ffe566, #6edfc8, #c9b8ff, #ff7b6b);
+          background-size: 300% 100%;
+          animation: shimmer 4s linear infinite;
         }
-        /* subtle ruled lines inside card */
-        .journal-card::after {
-          content:'';
-          position:absolute; inset:0;
-          pointer-events:none;
-          background-image:repeating-linear-gradient(
-            transparent, transparent 31px,
-            rgba(244,167,185,0.08) 31px, rgba(244,167,185,0.08) 32px
-          );
-          border-radius:28px;
+        @keyframes shimmer {
+          0%   { background-position: 0% center; }
+          100% { background-position: 300% center; }
         }
 
         /* ── Loading card ── */
         .load-card {
-          background:white;
-          border:1.5px solid rgba(244,167,185,0.22);
-          border-radius:22px; padding:22px 24px;
-          box-shadow:0 4px 22px rgba(212,114,138,0.09);
-        }
-        .load-label {
-          font-family:'Playfair Display',serif;
-          font-style:italic;
-          font-size:15px; color:#3d2a1e; font-weight:400;
-        }
-        .step-label {
-          font-family:'Caveat',cursive;
-          font-size:14px; color:#7a5c4f; font-weight:500;
+          background: white;
+          border: 2px solid #1a1028;
+          border-radius: 22px;
+          padding: 24px 26px;
+          box-shadow: 4px 4px 0 #1a1028;
         }
 
-        /* ── Result card wrapper ── */
+        /* ── Result wrapper ── */
         .result-wrap {
-          background:white;
-          border:1.5px solid rgba(244,167,185,0.22);
-          border-radius:24px; padding:24px;
-          box-shadow:0 6px 30px rgba(212,114,138,0.10);
-          position:relative; overflow:hidden;
+          background: white;
+          border: 2px solid #1a1028;
+          border-radius: 24px;
+          padding: 26px;
+          box-shadow: 5px 5px 0 #1a1028;
+          position: relative; overflow: hidden;
         }
         .result-wrap::before {
-          content:'';
-          position:absolute; top:0; left:0; right:0; height:3px;
-          background:linear-gradient(90deg,#d4728a,#f9c49a,#a8c5a0);
+          content: '';
+          position: absolute; top: 0; left: 0; right: 0; height: 4px;
+          background: linear-gradient(90deg, #ff7b6b, #ffe566, #6edfc8, #c9b8ff);
         }
 
-        /* ── Footer whisper ── */
-        .whisper {
-          text-align:center;
-          font-family:'Caveat',cursive;
-          font-size:14px; color:#b08878; font-weight:500;
+        /* ── Footer ── */
+        .footer-note {
+          text-align: center;
+          font-size: 12px;
+          color: #9585b0;
+          font-weight: 600;
+          letter-spacing: 0.05em;
         }
 
         @media(min-width:560px){
-          .nav  { padding:16px 36px; }
-          .body { padding:36px 28px 100px; }
+          .nav  { padding: 18px 40px; }
+          .body { padding: 44px 32px 100px; }
         }
       `}</style>
 
       <div className="page">
-        {/* Watercolour blobs */}
-        <div className="blob blob-rose" />
-        <div className="blob blob-peach" />
-        <div className="blob blob-sage" />
-        <div className="blob blob-lav" />
+        <div className="blob blob-a" />
+        <div className="blob blob-b" />
+        <div className="blob blob-c" />
+        <div className="blob blob-d" />
 
-        {/* Falling petals */}
-        {petals.map(p => <Petal key={p.id} emoji={p.emoji} style={p.style} />)}
+        {/* ── TICKER ── */}
+        <div className="ticker-wrap">
+          <div className="ticker-inner">
+            {[...Array(2)].map((_, rep) =>
+              ['Record your thought', 'Transcribe instantly', 'Smart summary', 'Action items', 'Multi-language'].map((t, i) => (
+                <span key={`${rep}-${i}`} className="ticker-item">
+                  {t}
+                  <span className="ticker-dot" style={{
+                    background: ['#ffe566','#6edfc8','#ff7b6b','#c9b8ff','#74c7f5'][i]
+                  }} />
+                </span>
+              ))
+            )}
+          </div>
+        </div>
 
         {/* ── NAV ── */}
         <motion.header className="nav"
-          initial={{ opacity:0, y:-12 }} animate={{ opacity:1, y:0 }}
-          transition={{ duration:0.5 }}
+          initial={{ opacity: 0, y: -14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45 }}
         >
-          <div className="logo-wrap">
-            <div className="logo-icon">🎙</div>
-            <span className="logo-text">V<span>oca</span></span>
-          </div>
+          <span className="logo">
+            Voca <b>AI</b>
+          </span>
 
-          <button className="notes-btn" onClick={() => setHistoryOpen(true)}>
-            📖 My Notes
-            {noteCount > 0 && (
-              <motion.span className="badge"
-                initial={{ scale:0 }} animate={{ scale:1 }}
-                transition={{ type:'spring', stiffness:500 }}
-              >{noteCount}</motion.span>
-            )}
-          </button>
+          <div className="nav-right">
+            <motion.button
+              className="notes-btn"
+              onClick={() => setHistoryOpen(true)}
+              whileTap={{ scale: 0.95 }}
+            >
+              My Notes
+              {noteCount > 0 && (
+                <motion.span className="badge"
+                  initial={{ scale: 0 }} animate={{ scale: 1 }}
+                  transition={springFast}
+                >{noteCount}</motion.span>
+              )}
+            </motion.button>
+          </div>
         </motion.header>
 
         <div className="body">
 
           {/* ── HERO ── */}
           <motion.div className="hero"
-            initial={{ opacity:0, y:18 }} animate={{ opacity:1, y:0 }}
-            transition={{ duration:0.7, delay:0.1 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.12 }}
           >
-            <div className="hero-tag">✨ your little voice journal</div>
+            <div className="hero-eyebrow">
+              <span style={{ width:7,height:7,borderRadius:'50%',background:'#ff7b6b',display:'inline-block' }}/>
+              AI-powered voice notes
+            </div>
 
             <h1>
-              Speak your mind.<br/>
+              Speak your mind.<br />
               <em>We'll handle the rest.</em>
             </h1>
 
             <p className="hero-sub">
-              record a thought · get a beautiful summary · keep your day
+              Record · Transcribe · Summarise · Done.
             </p>
 
             <div className="pills">
               {[
-                ['🎙','Record','pill-rose'],
-                ['✍️','Transcribe','pill-peach'],
-                ['✨','Summarise','pill-sage'],
-                ['✅','Actions','pill-lav'],
-              ].map(([icon, label, cls], i) => (
+                ['Record',     'pill-a'],
+                ['Transcribe', 'pill-b'],
+                ['Summarise',  'pill-c'],
+                ['Actions',    'pill-d'],
+              ].map(([label, cls], i) => (
                 <motion.span key={label}
                   className={`pill ${cls}`}
-                  initial={{ opacity:0, y:10, rotate:-3 }}
-                  animate={{ opacity:1, y:0, rotate:0 }}
-                  transition={{ delay:0.5 + i*0.09, type:'spring', stiffness:280 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.45 + i * 0.08, ...spring }}
                 >
-                  {icon} {label}
+                  {label}
                 </motion.span>
               ))}
             </div>
           </motion.div>
 
           {/* ── RECORDER CARD ── */}
-          <motion.div className="journal-card"
-            initial={{ opacity:0, y:24, scale:0.97 }}
-            animate={{ opacity:1, y:0, scale:1 }}
-            transition={{ duration:0.6, delay:0.25, type:'spring', stiffness:170 }}
+          <motion.div
+            className="rec-card"
+            initial={{ opacity: 0, y: 26, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.22, ...spring }}
           >
             <Recorder onResults={handleResults} onLoading={handleLoading} />
           </motion.div>
@@ -370,56 +389,61 @@ export default function Home() {
           <AnimatePresence>
             {loading && (
               <motion.div className="load-card"
-                initial={{ opacity:0, y:10, scale:0.97 }}
-                animate={{ opacity:1, y:0, scale:1 }}
-                exit={{ opacity:0, scale:0.97 }}
-                transition={{ duration:0.3 }}
+                initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.28 }}
               >
-                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
-                  {/* spinning rose loader */}
+                <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:18 }}>
                   <motion.div
-                    animate={{ rotate:360 }}
-                    transition={{ duration:1.2, repeat:Infinity, ease:'linear' }}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                     style={{
-                      width:18, height:18, borderRadius:'50%',
-                      border:'2.5px solid #fbd5df',
-                      borderTop:'2.5px solid #d4728a',
-                      flexShrink:0,
+                      width: 18, height: 18, borderRadius: '50%',
+                      border: '2.5px solid #ede8ff',
+                      borderTop: '2.5px solid #7c5cbf',
+                      flexShrink: 0,
                     }}
                   />
-                  <span className="load-label">Writing your note… 🌸</span>
+                  <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:15, color:'#1a1028' }}>
+                    Working on it…
+                  </span>
                 </div>
 
                 {[
-                  ['🎙','Listening to your voice'],
-                  ['🧠','Understanding the meaning'],
-                  ['📝','Composing your summary'],
-                ].map(([icon, label], i) => (
+                  ['Transcribing your voice',   '#ffe4e0', '#ff7b6b'],
+                  ['Understanding your message','#fff9d6', '#c49a00'],
+                  ['Writing your summary',      '#d6f5ef', '#2a9d8f'],
+                ].map(([label, bg, col], i) => (
                   <div key={i} style={{
-                    display:'flex', alignItems:'center', gap:10, marginBottom:7,
-                    opacity: step===i+1 ? 1 : step>i+1 ? 0.3 : 0.15,
-                    transition:'opacity 0.5s',
+                    display:'flex', alignItems:'center', gap:10, marginBottom:8,
+                    opacity: step === i+1 ? 1 : step > i+1 ? 0.35 : 0.18,
+                    transition: 'opacity 0.4s',
                   }}>
-                    <motion.span
-                      animate={step===i+1 ? { scale:[1,1.5,1] } : {}}
-                      transition={{ duration:0.7, repeat:Infinity }}
-                      style={{ fontSize:14 }}
-                    >{icon}</motion.span>
-                    <span className="step-label" style={{
-                      fontWeight: step===i+1 ? 600 : 500,
-                      color: step===i+1 ? '#d4728a' : '#b08878',
+                    <div style={{
+                      width:8, height:8, borderRadius:'50%', flexShrink:0,
+                      background: step > i+1 ? col : step === i+1 ? col : '#e8e0f5',
+                      transition: 'background 0.4s',
+                    }}/>
+                    <span style={{
+                      fontFamily:"'Syne',sans-serif",
+                      fontSize:13, fontWeight: step === i+1 ? 700 : 500,
+                      color: step === i+1 ? '#1a1028' : '#9585b0',
                     }}>{label}</span>
-                    {step>i+1 && <span style={{ marginLeft:'auto', fontSize:13, color:'#a8c5a0' }}>✓</span>}
+                    {step > i+1 && (
+                      <span style={{ marginLeft:'auto', fontSize:11, fontWeight:700, color:'#2a9d8f' }}>done</span>
+                    )}
                   </div>
                 ))}
 
-                {/* progress worm */}
-                <div style={{ height:3, background:'#fde8d0', borderRadius:99, marginTop:16, overflow:'hidden', position:'relative' }}>
+                <div style={{ height:4, background:'#ede8ff', borderRadius:99, marginTop:18, overflow:'hidden', position:'relative' }}>
                   <motion.div
-                    style={{ position:'absolute', height:'100%', borderRadius:99, width:'40%',
-                      background:'linear-gradient(90deg,#d4728a,#f9c49a)' }}
+                    style={{
+                      position:'absolute', height:'100%', borderRadius:99, width:'40%',
+                      background:'linear-gradient(90deg,#c9b8ff,#ff7b6b)',
+                    }}
                     animate={{ left:['-40%','110%'] }}
-                    transition={{ duration:1.8, repeat:Infinity, ease:'easeInOut' }}
+                    transition={{ duration:1.7, repeat:Infinity, ease:'easeInOut' }}
                   />
                 </div>
               </motion.div>
@@ -430,31 +454,41 @@ export default function Home() {
           <AnimatePresence>
             {results && !loading && (
               <motion.div className="result-wrap"
-                initial={{ opacity:0, y:18, scale:0.97 }}
+                initial={{ opacity:0, y:20, scale:0.97 }}
                 animate={{ opacity:1, y:0, scale:1 }}
                 exit={{ opacity:0 }}
-                transition={{ duration:0.45, type:'spring', stiffness:190 }}
+                transition={{ duration:0.4, ...spring }}
               >
                 <div style={{
                   display:'flex', alignItems:'center', justifyContent:'space-between',
-                  marginBottom:18, paddingBottom:14,
-                  borderBottom:'1.5px solid #fde8d0',
+                  marginBottom:20, paddingBottom:16,
+                  borderBottom:'2px solid #1a1028',
                 }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                    <span style={{ fontSize:18 }}>🌸</span>
-                    <span style={{
-                      fontFamily:"'Playfair Display',serif",
-                      fontStyle:'italic', fontSize:14,
-                      color:'#3d2a1e', fontWeight:400,
-                    }}>your note summary</span>
-                  </div>
+                  <span style={{
+                    fontFamily:"'Syne',sans-serif",
+                    fontWeight:800, fontSize:12,
+                    letterSpacing:'0.1em', textTransform:'uppercase',
+                    color:'#1a1028',
+                  }}>
+                    Note Summary
+                  </span>
                   <button onClick={() => setHistoryOpen(true)} style={{
-                    background:'linear-gradient(135deg,rgba(212,114,138,0.08),rgba(249,196,154,0.08))',
-                    border:'1.5px solid rgba(212,114,138,0.18)',
-                    borderRadius:99, padding:'4px 14px', cursor:'pointer',
-                    fontFamily:"'Caveat',cursive", fontSize:13,
-                    color:'#d4728a', fontWeight:600,
-                  }}>All notes →</button>
+                    background:'#ffe566',
+                    border:'2px solid #1a1028',
+                    borderRadius:99,
+                    padding:'4px 14px',
+                    cursor:'pointer',
+                    fontFamily:"'Syne',sans-serif",
+                    fontSize:12, fontWeight:700,
+                    color:'#1a1028',
+                    boxShadow:'2px 2px 0 #1a1028',
+                    transition:'all 0.15s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.transform='translateY(-2px)'}
+                  onMouseLeave={e => e.currentTarget.style.transform='translateY(0)'}
+                  >
+                    All notes →
+                  </button>
                 </div>
                 <ResultCard results={results} />
               </motion.div>
@@ -464,11 +498,11 @@ export default function Home() {
           {/* ── FOOTER ── */}
           <AnimatePresence>
             {!hasRecorded && (
-              <motion.p className="whisper"
+              <motion.p className="footer-note"
                 initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-                transition={{ delay:1.4, duration:0.9 }}
+                transition={{ delay:1.3, duration:0.8 }}
               >
-                🔒 your recordings are never stored
+                Your recordings are never stored
               </motion.p>
             )}
           </AnimatePresence>
