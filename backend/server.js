@@ -14,14 +14,21 @@ const { GoogleGenAI } = require("@google/genai");
 const Groq = require("groq-sdk");
 const { AssemblyAI } = require("assemblyai");
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const ai       = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const groq     = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const assembly = new AssemblyAI({ apiKey: process.env.ASSEMBLYAI_API_KEY });
 
-const app = express();
+const app  = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://voca-amber.vercel.app',
+    /\.vercel\.app$/
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 /* =========================
@@ -38,40 +45,29 @@ if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
-
-  // fixes ECONNRESET with Railway
   max: 5,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 20000
 });
 
-pool.on("error", (err) => {
-  console.error("Unexpected DB error:", err);
-});
-
-/* =========================
-   INIT DATABASE
-========================= */
+pool.on("error", (err) => console.error("Unexpected DB error:", err));
 
 async function initDB() {
   try {
-
     await pool.query(`
       CREATE TABLE IF NOT EXISTS notes (
-        id SERIAL PRIMARY KEY,
+        id          SERIAL PRIMARY KEY,
         transcription TEXT NOT NULL,
-        summary TEXT,
-        keyPoints TEXT,
-        actionItems TEXT,
-        mood TEXT,
-        wordCount INTEGER,
-        language TEXT DEFAULT 'en',
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        summary       TEXT,
+        "keyPoints"   TEXT,
+        "actionItems" TEXT,
+        mood          TEXT,
+        "wordCount"   INTEGER,
+        language      TEXT DEFAULT 'en',
+        "createdAt"   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-
     console.log("Database ready");
-
   } catch (err) {
     console.error("Database init error:", err);
   }
@@ -85,247 +81,237 @@ initDB();
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
-
-  filename: (req, file, cb) =>
-    cb(null, `${Date.now()}-${file.originalname}`)
+  filename:    (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
 });
 
-const upload = multer({
-  storage,
-  limits: { fileSize: 25 * 1024 * 1024 }
-});
+const upload = multer({ storage, limits: { fileSize: 25 * 1024 * 1024 } });
+
+/* =========================
+   HELPERS
+========================= */
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const isQuotaError = err =>
+  err?.message?.includes('429') ||
+  err?.message?.includes('quota') ||
+  err?.message?.includes('RESOURCE_EXHAUSTED');
 
 /* =========================
    GEMINI SUMMARIZER
 ========================= */
 
 async function summarizeWithGemini(transcription) {
+  const prompt = `Analyze this voice note transcription and return ONLY valid JSON, no markdown, no explanation.
 
-  const prompt = `
-Analyze this voice note transcription and return JSON.
+Transcription: "${transcription}"
 
-${transcription}
-
-Return format:
-
+Return exactly this format:
 {
- "summary":"short summary",
- "keyPoints":["point1","point2"],
- "actionItems":["task1","task2"],
- "mood":"one word mood",
- "wordCount":0
-}
-`;
+  "summary": "2-3 sentence summary",
+  "keyPoints": ["point 1", "point 2", "point 3"],
+  "actionItems": ["action 1", "action 2"],
+  "mood": "one word (e.g. Focused, Casual, Urgent, Excited, Reflective, Professional)",
+  "wordCount": ${transcription.split(/\s+/).length}
+}`;
 
   const response = await ai.models.generateContent({
     model: "gemini-2.0-flash",
     contents: prompt
   });
 
-  let text = response.text.trim();
-
-  // remove markdown formatting if Gemini adds it
-  text = text
-    .replace(/^```json/, "")
-    .replace(/^```/, "")
-    .replace(/```$/, "");
+  let text = response.text.trim()
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/, '')
+    .replace(/\s*```$/, '')
+    .trim();
 
   let parsed;
-
   try {
     parsed = JSON.parse(text);
-  } catch (err) {
-
+  } catch {
     parsed = {
-      summary: text,
-      keyPoints: [],
+      summary:     text.slice(0, 300) || "Could not parse summary.",
+      keyPoints:   [],
       actionItems: [],
-      mood: "unknown"
+      mood:        "Casual"
     };
-
   }
 
-  parsed.wordCount =
-    parsed.wordCount || transcription.split(/\s+/).length;
-
+  parsed.wordCount = parsed.wordCount || transcription.split(/\s+/).length;
   return parsed;
 }
 
+async function summarizeWithRetry(transcription, retries = 2) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await summarizeWithGemini(transcription);
+    } catch (err) {
+      if (isQuotaError(err) && attempt < retries) {
+        console.log(`Gemini quota hit, waiting 20s before retry ${attempt + 1}...`);
+        await sleep(20000);
+        continue;
+      }
+      // Re-throw with clean message
+      if (isQuotaError(err)) {
+        const e = new Error('Gemini quota reached — please wait a moment and try again.');
+        e.statusCode = 429;
+        throw e;
+      }
+      throw err;
+    }
+  }
+}
+
 /* =========================
-   TRANSCRIBE
+   TRANSCRIBE HELPER
 ========================= */
 
+async function transcribeAudio(filePath, language) {
+  // Try Groq (Whisper) first
+  try {
+    const fileStream = fs.createReadStream(filePath);
+    const opts = { file: fileStream, model: "whisper-large-v3" };
+    if (language) opts.language = language;
+    const result = await groq.audio.transcriptions.create(opts);
+    return result.text;
+  } catch (err) {
+    console.warn("Groq failed, falling back to AssemblyAI:", err.message);
+  }
+
+  // Fallback to AssemblyAI
+  const opts = { audio: filePath };
+  if (language) opts.language_code = language;
+  const transcript = await assembly.transcripts.transcribe(opts);
+  return transcript.text;
+}
+
+/* =========================
+   ROUTES
+========================= */
+
+// ── Transcribe only
 app.post("/api/transcribe", upload.single("audio"), async (req, res) => {
-
-  if (!req.file)
-    return res.status(400).json({ error: "No audio file" });
-
+  if (!req.file) return res.status(400).json({ error: "No audio file" });
   const filePath = req.file.path;
+  const language = req.body.language || null;
 
   try {
-
-    let transcription = "";
-
-    try {
-
-      const fileStream = fs.createReadStream(filePath);
-
-      const result = await groq.audio.transcriptions.create({
-        file: fileStream,
-        model: "whisper-large-v3"
-      });
-
-      transcription = result.text;
-
-    } catch (err) {
-
-      const transcript = await assembly.transcripts.transcribe({
-        audio: filePath
-      });
-
-      transcription = transcript.text;
-    }
-
+    const transcription = await transcribeAudio(filePath, language);
     res.json({ success: true, transcription });
-
   } catch (err) {
-
-    res.status(500).json({ error: err.message });
-
+    console.error("Transcribe error:", err);
+    res.status(500).json({ error: "Transcription failed", details: err.message });
   } finally {
-
     fs.unlink(filePath, () => {});
   }
 });
 
-/* =========================
-   SUMMARIZE
-========================= */
-
+// ── Transcribe + Summarize
 app.post("/api/summarize", upload.single("audio"), async (req, res) => {
-
-  if (!req.file)
-    return res.status(400).json({ error: "No audio file" });
-
+  if (!req.file) return res.status(400).json({ error: "No audio file" });
   const filePath = req.file.path;
+  const language = req.body.language || null;
 
   try {
+    // 1. Transcribe
+    const transcription = await transcribeAudio(filePath, language);
 
-    let transcription = "";
-
-    try {
-
-      const fileStream = fs.createReadStream(filePath);
-
-      const result = await groq.audio.transcriptions.create({
-        file: fileStream,
-        model: "whisper-large-v3"
-      });
-
-      transcription = result.text;
-
-    } catch (err) {
-
-      const transcript = await assembly.transcripts.transcribe({
-        audio: filePath
-      });
-
-      transcription = transcript.text;
+    if (!transcription || transcription.trim().length < 3) {
+      return res.status(400).json({ error: "Could not detect speech in audio." });
     }
 
-    const summary = await summarizeWithGemini(transcription);
+    // 2. Summarize (with retry on quota error)
+    const summary = await summarizeWithRetry(transcription);
 
+    // 3. Save to DB
     const db = await pool.query(
-      `INSERT INTO notes
-      (transcription,summary,keyPoints,actionItems,mood,wordCount)
-      VALUES ($1,$2,$3,$4,$5,$6)
-      RETURNING id`,
+      `INSERT INTO notes (transcription, summary, "keyPoints", "actionItems", mood, "wordCount", language)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, "createdAt"`,
       [
         transcription,
         summary.summary,
-        JSON.stringify(summary.keyPoints),
-        JSON.stringify(summary.actionItems),
+        JSON.stringify(summary.keyPoints   || []),
+        JSON.stringify(summary.actionItems || []),
         summary.mood,
-        summary.wordCount
+        summary.wordCount,
+        language || 'en'
       ]
     );
 
     res.json({
-      success: true,
-      id: db.rows[0].id,
+      success:       true,
+      id:            db.rows[0].id,
+      timestamp:     db.rows[0].createdAt,
       transcription,
       ...summary
     });
 
   } catch (err) {
-
-    res.status(500).json({ error: err.message });
-
+    console.error("Summarize error:", err);
+    const status = err.statusCode || 500;
+    res.status(status).json({ error: err.message, details: err.details });
   } finally {
-
     fs.unlink(filePath, () => {});
   }
 });
 
-/* =========================
-   GET NOTES
-========================= */
-
+// ── Get all notes
 app.get("/api/notes", async (req, res) => {
-
   try {
-
     const result = await pool.query(
-      `SELECT * FROM notes ORDER BY "createdAt" DESC LIMIT 50`
+      `SELECT id, transcription, summary, "keyPoints", "actionItems", mood, "wordCount", language, "createdAt"
+       FROM notes
+       ORDER BY "createdAt" DESC
+       LIMIT 50`
     );
 
     const notes = result.rows.map(n => ({
-
       ...n,
-
-      keyPoints: JSON.parse(n.keypoints || "[]"),
-
-      actionItems: JSON.parse(n.actionitems || "[]")
-
+      keyPoints:   JSON.parse(n.keyPoints   || '[]'),
+      actionItems: JSON.parse(n.actionItems || '[]'),
     }));
 
     res.json({ success: true, notes });
-
   } catch (err) {
-
+    console.error("Get notes error:", err);
     res.status(500).json({ error: err.message });
-
   }
 });
 
-/* =========================
-   HEALTH CHECK
-========================= */
-
-app.get("/health", async (req, res) => {
-
+// ── Delete single note
+app.delete("/api/notes/:id", async (req, res) => {
   try {
-
-    const result = await pool.query(`SELECT COUNT(*) FROM notes`);
-
-    res.json({
-      status: "Voca alive",
-      notes: result.rows[0].count
-    });
-
+    await pool.query(`DELETE FROM notes WHERE id = $1`, [req.params.id]);
+    res.json({ success: true });
   } catch (err) {
-
     res.status(500).json({ error: err.message });
+  }
+});
 
+// ── Delete all notes
+app.delete("/api/notes", async (req, res) => {
+  try {
+    await pool.query(`DELETE FROM notes`);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Health check
+app.get("/health", async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT COUNT(*) FROM notes`);
+    res.json({ status: "Voca alive", notes: parseInt(result.rows[0].count) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
 /* =========================
-   START SERVER
+   START
 ========================= */
 
-app.listen(PORT, () => {
-
-  console.log(`Server running on ${PORT}`);
-
-});
+app.listen(PORT, "0.0.0.0", () => console.log(`Voca server on port ${PORT}`));
