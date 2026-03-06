@@ -3,6 +3,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
+  /* ── Core palette ── */
   --bg:       #fdf6ff;
   --surface:  #fff;
   --surface2: #f9f0ff;
@@ -16,6 +17,14 @@
   --text:     #1a0a2e;
   --text2:    #6b4f8a;
   --muted:    #a78fc0;
+
+  /* ── Aliases used by Recorder.jsx & ResultCard.jsx ── */
+  --plum:     #4a2d4e;        /* dark plum — primary action colour   */
+  --plum-lt:  #c084fc;        /* lighter plum for waveform bars      */
+  --paper:    #f9f0ff;        /* soft off-white card background       */
+
+  /* These mirror the core vars above so Recorder inline styles resolve */
+  /* --text, --border, --border2, --muted are already defined above    */
 }
 
 html, body {
@@ -34,23 +43,46 @@ textarea { font-family: 'Nunito', sans-serif; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+/* ── Animations ── */
+@keyframes spin    { to { transform: rotate(360deg); } }
+
 @keyframes float {
   0%,100% { transform: translateY(0px); }
-  50%      { transform: translateY(-6px); }
+  50%     { transform: translateY(-6px); }
 }
+
 @keyframes worm {
   0%   { left: -40%; width: 40%; }
   50%  { left: 30%;  width: 60%; }
   100% { left: 110%; width: 40%; }
 }
+
 @keyframes blob {
   0%,100% { border-radius: 60% 40% 70% 30% / 50% 60% 40% 70%; }
-  25%      { border-radius: 40% 60% 30% 70% / 70% 30% 60% 40%; }
-  50%      { border-radius: 70% 30% 60% 40% / 40% 70% 30% 60%; }
-  75%      { border-radius: 30% 70% 40% 60% / 60% 40% 70% 30%; }
+  25%     { border-radius: 40% 60% 30% 70% / 70% 30% 60% 40%; }
+  50%     { border-radius: 70% 30% 60% 40% / 40% 70% 30% 60%; }
+  75%     { border-radius: 30% 70% 40% 60% / 60% 40% 70% 30%; }
 }
+
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* SoundWave bars animation */
+@keyframes bar {
+  0%,100% { transform: scaleY(0.4); }
+  50%     { transform: scaleY(1); }
+}
+
+.bar {
+  animation: bar 0.9s ease-in-out infinite;
+  transform-origin: bottom;
+}
+.bar:nth-child(2) { animation-delay: 0.1s; }
+.bar:nth-child(3) { animation-delay: 0.2s; }
+.bar:nth-child(4) { animation-delay: 0.3s; }
+.bar:nth-child(5) { animation-delay: 0.15s; }
+.bar:nth-child(6) { animation-delay: 0.25s; }
+.bar:nth-child(7) { animation-delay: 0.05s; }
+.bar:nth-child(8) { animation-delay: 0.35s; }
