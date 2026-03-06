@@ -8,12 +8,11 @@ import HistoryPanel from './components/HistoryPanel'
 
 function HistoryIcon({ hasNotes }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
       <polyline points="14,2 14,8 20,8"/>
       <line x1="16" y1="13" x2="8" y2="13"/>
       <line x1="16" y1="17" x2="8" y2="17"/>
-      <line x1="10" y1="9" x2="8" y2="9"/>
       {hasNotes && <circle cx="19" cy="5" r="4" fill="var(--plum)" stroke="none"/>}
     </svg>
   )
@@ -46,188 +45,268 @@ export default function Home() {
 
   return (
     <>
-      {/* Inline responsive styles */}
       <style>{`
-        .voca-wrap {
+        * { box-sizing: border-box; }
+        .page {
           min-height: 100vh;
           background: var(--cream);
           display: flex;
           flex-direction: column;
         }
-        .voca-nav {
+
+        /* ── NAV ── */
+        .nav {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 16px 20px;
+          padding: 14px 18px;
           border-bottom: 1px solid var(--border);
+          background: var(--cream);
           position: sticky;
           top: 0;
-          background: var(--cream);
           z-index: 20;
         }
-        .voca-body {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          max-width: 600px;
-          width: 100%;
-          margin: 0 auto;
-          padding: 24px 16px 60px;
-          gap: 14px;
-        }
-        .voca-hero {
-          text-align: center;
-          padding: 8px 0 4px;
-        }
-        .voca-hero h1 {
+        .nav-logo {
           font-family: 'Cormorant Garamond', serif;
-          font-size: clamp(28px, 8vw, 48px);
-          font-weight: 400;
-          color: var(--text);
-          line-height: 1.1;
-          letter-spacing: -0.01em;
-          margin-bottom: 6px;
-        }
-        .voca-hero p {
-          font-family: 'Cormorant Garamond', serif;
-          font-size: clamp(15px, 4vw, 20px);
-          color: var(--plum2);
+          font-size: 22px;
           font-style: italic;
-          margin-bottom: 12px;
-        }
-        .voca-pills {
-          display: flex;
-          justify-content: center;
-          gap: 6px;
-          flex-wrap: wrap;
-        }
-        .voca-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          padding: 4px 11px;
-          border-radius: 99px;
-          border: 1px solid var(--border);
-          background: rgba(255,255,255,0.7);
-          font-size: 11px;
-          color: var(--text2);
           font-weight: 500;
+          color: var(--plum);
         }
-        .voca-card {
-          background: var(--paper);
-          border: 1px solid var(--border);
-          border-radius: 20px;
-          padding: clamp(20px, 5vw, 32px);
-          box-shadow: 0 2px 20px rgba(74,45,78,0.07);
-          position: relative;
-          overflow: hidden;
-        }
-        .voca-card::before {
-          content: '';
-          position: absolute;
-          top: 0; left: 0; right: 0; height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
-        }
-        .notes-btn {
+        .nav-btn {
           display: flex;
           align-items: center;
           gap: 6px;
-          padding: 7px 12px;
-          border-radius: 10px;
+          padding: 6px 12px;
           border: 1px solid var(--border);
+          border-radius: 8px;
           background: white;
-          cursor: pointer;
           font-family: 'Outfit', sans-serif;
           font-size: 12px;
           font-weight: 500;
           color: var(--text2);
+          cursor: pointer;
           transition: all 0.15s;
         }
-        .notes-btn:hover { border-color: var(--plum-lt); color: var(--plum); }
-        .result-card {
-          background: var(--paper);
-          border: 1px solid var(--border);
-          border-radius: 16px;
-          padding: clamp(18px, 4vw, 28px);
-          box-shadow: 0 2px 20px rgba(74,45,78,0.07);
+        .nav-btn:hover { border-color: var(--plum-lt); color: var(--plum); }
+        .badge {
+          min-width: 15px;
+          height: 15px;
+          border-radius: 99px;
+          padding: 0 4px;
+          background: var(--plum);
+          color: white;
+          font-size: 9px;
+          font-weight: 700;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        /* ── HERO STRIP ── */
+        .hero-strip {
+          background: var(--plum);
+          padding: 28px 20px 24px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 8px;
           position: relative;
           overflow: hidden;
         }
-        .result-card::before {
+        .hero-strip::after {
           content: '';
           position: absolute;
-          top: 0; left: 0; right: 0; height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
+          bottom: 0; left: 0; right: 0;
+          height: 1px;
+          background: rgba(255,255,255,0.08);
         }
-        .loading-card {
+        .hero-eyebrow {
+          font-size: 9px;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: var(--plum-lt);
+          font-weight: 600;
+        }
+        .hero-title {
+          font-family: 'Cormorant Garamond', serif;
+          font-size: clamp(30px, 8vw, 44px);
+          font-weight: 400;
+          color: white;
+          line-height: 1.1;
+          letter-spacing: -0.01em;
+        }
+        .hero-sub {
+          font-family: 'Cormorant Garamond', serif;
+          font-size: clamp(14px, 3.5vw, 18px);
+          color: rgba(255,255,255,0.6);
+          font-style: italic;
+        }
+        .hero-pills {
+          display: flex;
+          gap: 6px;
+          flex-wrap: wrap;
+          justify-content: center;
+          margin-top: 4px;
+        }
+        .hero-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 3px 10px;
+          border-radius: 99px;
+          border: 1px solid rgba(255,255,255,0.15);
+          background: rgba(255,255,255,0.07);
+          font-size: 10px;
+          color: rgba(255,255,255,0.6);
+          font-weight: 500;
+          letter-spacing: 0.03em;
+        }
+
+        /* ── BODY ── */
+        .body {
+          flex: 1;
+          max-width: 600px;
+          width: 100%;
+          margin: 0 auto;
+          padding: 20px 16px 60px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        /* ── RECORDER CARD ── */
+        .rec-card {
           background: var(--paper);
           border: 1px solid var(--border);
-          border-radius: 16px;
-          padding: 20px 22px;
-          box-shadow: 0 2px 16px rgba(74,45,78,0.05);
+          border-radius: 18px;
+          padding: 24px 20px;
+          box-shadow: 0 2px 16px rgba(74,45,78,0.07);
+          position: relative;
+          overflow: hidden;
         }
+        .rec-card::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
+        }
+
+        /* ── LOADING CARD ── */
+        .load-card {
+          background: var(--paper);
+          border: 1px solid var(--border);
+          border-radius: 14px;
+          padding: 18px 20px;
+        }
+
+        /* ── RESULT CARD ── */
+        .result-wrap {
+          background: var(--paper);
+          border: 1px solid var(--border);
+          border-radius: 14px;
+          padding: 20px;
+          box-shadow: 0 2px 16px rgba(74,45,78,0.07);
+          position: relative;
+          overflow: hidden;
+        }
+        .result-wrap::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
+        }
+        .result-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 16px;
+          padding-bottom: 14px;
+          border-bottom: 1px solid var(--border);
+        }
+        .result-head-left {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .result-dot {
+          width: 6px; height: 6px;
+          border-radius: 50%;
+          background: var(--plum);
+        }
+        .result-label {
+          font-size: 10px;
+          font-weight: 700;
+          color: var(--text);
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+        }
+        .view-all-btn {
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 11px;
+          color: var(--plum-lt);
+          font-family: 'Outfit', sans-serif;
+          font-weight: 500;
+          text-decoration: underline dotted;
+          text-underline-offset: 3px;
+          padding: 0;
+        }
+
         @media (min-width: 600px) {
-          .voca-body { padding: 40px 24px 80px; gap: 16px; }
-          .voca-nav { padding: 20px 40px; }
-          .voca-hero { padding: 12px 0 8px; }
+          .nav { padding: 18px 36px; }
+          .hero-strip { padding: 36px 24px 30px; }
+          .body { padding: 28px 24px 80px; }
+          .rec-card { padding: 32px 28px; }
         }
       `}</style>
 
-      <div className="voca-wrap">
+      <div className="page">
 
         {/* NAV */}
-        <motion.nav className="voca-nav"
+        <motion.header className="nav"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
         >
-          <span style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 24, fontWeight: 500, fontStyle: 'italic', color: 'var(--plum)',
-          }}>Voca</span>
-
-          <button className="notes-btn" onClick={() => setHistoryOpen(true)}>
+          <span className="nav-logo">Voca</span>
+          <button className="nav-btn" onClick={() => setHistoryOpen(true)}>
             <HistoryIcon hasNotes={noteCount > 0} />
             Notes
-            {noteCount > 0 && (
-              <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                style={{
-                  minWidth: 16, height: 16, borderRadius: 99, padding: '0 4px',
-                  background: 'var(--plum)', color: 'white',
-                  fontSize: 9, fontWeight: 700,
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                }}
-              >{noteCount}</motion.span>
-            )}
+            {noteCount > 0 && <span className="badge">{noteCount}</span>}
           </button>
-        </motion.nav>
+        </motion.header>
+
+        {/* HERO STRIP */}
+        <motion.div className="hero-strip"
+          initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <p className="hero-eyebrow">Voice · AI · Clarity</p>
+          <h1 className="hero-title">Speak your mind.</h1>
+          <p className="hero-sub">Your words, beautifully organised.</p>
+          <div className="hero-pills">
+            {[['◎','Transcribe'],['◈','Summarise'],['◇','Actions']].map(([icon, label], i) => (
+              <motion.span key={label} className="hero-pill"
+                initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5 + i * 0.08 }}
+              >
+                <span style={{ color: 'var(--plum-lt)', opacity: 0.8 }}>{icon}</span>
+                {label}
+              </motion.span>
+            ))}
+          </div>
+        </motion.div>
 
         {/* BODY */}
-        <div className="voca-body">
-
-          {/* Hero */}
-          <motion.div className="voca-hero"
-            initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            <h1>Speak your mind.</h1>
-            <p>Your words, beautifully organised.</p>
-            <div className="voca-pills">
-              {[['◎','Transcribe'],['◈','Summarise'],['◇','Actions']].map(([icon, label], i) => (
-                <motion.span key={label} className="voca-pill"
-                  initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.6 + i * 0.1 }}
-                >
-                  <span style={{ color: 'var(--plum-lt)', fontSize: 9 }}>{icon}</span>
-                  {label}
-                </motion.span>
-              ))}
-            </div>
-          </motion.div>
+        <div className="body">
 
           {/* Recorder */}
-          <motion.div className="voca-card"
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+          <motion.div className="rec-card"
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
           >
             <Recorder onResults={handleResults} onLoading={handleLoading} />
           </motion.div>
@@ -235,9 +314,9 @@ export default function Home() {
           {/* Loading */}
           <AnimatePresence>
             {loading && (
-              <motion.div className="loading-card"
+              <motion.div className="load-card"
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }} transition={{ duration: 0.35 }}
+                exit={{ opacity: 0 }} transition={{ duration: 0.3 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                   <motion.div
@@ -255,8 +334,9 @@ export default function Home() {
                     <motion.div
                       animate={step === i+1 ? { scale: [1,1.6,1] } : {}}
                       transition={{ duration: 0.7, repeat: Infinity }}
-                      style={{ width: 5, height: 5, borderRadius: '50%', flexShrink: 0, transition: 'background 0.5s',
+                      style={{ width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
                         background: step > i+1 ? 'var(--plum-lt)' : step === i+1 ? 'var(--plum)' : 'var(--border2)',
+                        transition: 'background 0.5s',
                       }}
                     />
                     <span style={{ fontSize: 12, color: 'var(--text2)', fontWeight: step === i+1 ? 500 : 400 }}>{label}</span>
@@ -276,25 +356,16 @@ export default function Home() {
           {/* Results */}
           <AnimatePresence>
             {results && !loading && (
-              <motion.div className="result-card"
-                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }} transition={{ duration: 0.5, ease: [0.16,1,0.3,1] }}
+              <motion.div className="result-wrap"
+                initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }} transition={{ duration: 0.45, ease: [0.16,1,0.3,1] }}
               >
-                <div style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  marginBottom: 16, paddingBottom: 14, borderBottom: '1px solid var(--border)',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--plum)' }} />
-                    <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text)', letterSpacing: '0.09em', textTransform: 'uppercase' }}>
-                      Note Summary
-                    </span>
+                <div className="result-head">
+                  <div className="result-head-left">
+                    <div className="result-dot" />
+                    <span className="result-label">Note Summary</span>
                   </div>
-                  <button onClick={() => setHistoryOpen(true)} style={{
-                    background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                    fontSize: 11, color: 'var(--plum-lt)', fontFamily: "'Outfit', sans-serif",
-                    fontWeight: 500, textDecoration: 'underline dotted', textUnderlineOffset: 3,
-                  }}>
+                  <button className="view-all-btn" onClick={() => setHistoryOpen(true)}>
                     View all →
                   </button>
                 </div>
