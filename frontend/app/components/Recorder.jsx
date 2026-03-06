@@ -14,7 +14,7 @@ const LANGUAGES = [
   { code: null,  label: 'Auto-detect', flag: '🌐' },
 ]
 
-const sp = { type: 'spring', stiffness: 320, damping: 26 }
+const sp = { type: 'spring', stiffness: 320, damping: 28 }
 
 export default function Recorder({ onResults, onLoading }) {
   const [stage,      setStage]      = useState('idle')
@@ -32,7 +32,7 @@ export default function Recorder({ onResults, onLoading }) {
   const timerRef  = useRef(null)
   const audioRef  = useRef(null)
 
-  const fmt = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
+  const fmt = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`
 
   const startRecording = useCallback(async () => {
     setError(null); chunksRef.current = []; setLangOpen(false)
@@ -104,12 +104,8 @@ export default function Recorder({ onResults, onLoading }) {
     if (!transcript.trim()) return
     onLoading(true); onResults(null); setError(null)
     try {
-      const url  = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'
-      // ✅ FIXED: was /api/summarize-text, now posts audio to /api/summarize
-      const res  = await fetch(`${url}/api/summarize`, {
-        method: 'POST',
-        body: buildFormData(),
-      })
+      const url = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'
+      const res = await fetch(`${url}/api/summarize`, { method: 'POST', body: buildFormData() })
       const data = await res.json()
       if (!res.ok) throw new Error(data.details || data.error || 'Summarization failed')
       onResults(data)
@@ -125,153 +121,135 @@ export default function Recorder({ onResults, onLoading }) {
     setAudioUrl(null); setRecTime(0); setTranscript(''); setError(null); onResults(null)
   }
 
-  /* ── Shared button styles ── */
-  const btnBase = {
-    width: '100%', borderRadius: 12,
-    background: 'white', color: 'var(--text2)',
-    border: '2px solid #1a0f2e',
-    cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
-    fontWeight: 600, fontSize: 13,
-    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-    boxShadow: '3px 3px 0 #1a0f2e',
-    transition: 'all 0.14s',
-  }
-  const primaryBtn = {
-    width: '100%', borderRadius: 12,
-    background: '#4a2d78', color: 'white',
-    border: '2px solid #1a0f2e',
-    cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
-    fontWeight: 700, fontSize: 14,
-    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-    boxShadow: '3px 3px 0 #1a0f2e',
-    transition: 'all 0.14s',
-  }
-
   return (
     <>
       <style>{`
-        .rec-btn:hover  { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 #1a0f2e !important; }
-        .rec-btn:active { transform: translate(1px,1px);   box-shadow: 1px 1px 0 #1a0f2e !important; }
-
-        /* 3D mic button */
-        .mic-3d {
-          width: 96px; height: 96px; border-radius: 50%;
-          border: 2.5px solid #1a0f2e;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; position: relative; overflow: hidden;
-          transition: all 0.2s cubic-bezier(.34,1.56,.64,1);
-        }
-        .mic-3d::before {
-          content: '';
-          position: absolute; inset: 0; border-radius: 50%;
-          background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 60%);
-          z-index: 1; pointer-events: none;
-        }
-        .mic-3d:hover {
-          transform: translate(-3px,-3px) scale(1.05);
-          box-shadow: 7px 7px 0 #1a0f2e !important;
-        }
-        .mic-3d:active {
-          transform: translate(2px,2px) scale(0.97);
-          box-shadow: 2px 2px 0 #1a0f2e !important;
-        }
-        .mic-3d-idle {
-          background: white;
-          box-shadow: 4px 4px 0 #1a0f2e;
-        }
-        .mic-3d-rec {
-          background: linear-gradient(135deg, #4a2d78, #7c4daf);
-          box-shadow: 4px 4px 0 #1a0f2e, 0 0 0 0 rgba(74,45,120,0.4);
-          animation: recPulse3d 1.5s ease-in-out infinite;
-        }
-        @keyframes recPulse3d {
-          0%,100% { box-shadow: 4px 4px 0 #1a0f2e, 0 0 0 0 rgba(74,45,120,0.4); }
-          50%     { box-shadow: 4px 4px 0 #1a0f2e, 0 0 0 16px rgba(74,45,120,0); }
-        }
-
-        /* Language picker */
+        /* ── Language picker ── */
         .lang-btn {
-          display: flex; align-items: center; gap: 6px; padding: 6px 13px;
-          background: white; border: 2px solid #1a0f2e; border-radius: 10px;
+          display: flex; align-items: center; gap: 7px; padding: 7px 13px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
           cursor: pointer; font-family: 'DM Sans', sans-serif;
-          font-size: 12px; font-weight: 600; color: #3d2f5a;
-          box-shadow: 2px 2px 0 #1a0f2e; transition: all .15s;
+          font-size: 12px; font-weight: 500; color: rgba(245,239,230,0.6);
+          transition: all .18s;
         }
-        .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 #1a0f2e; }
-        .lang-btn:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 #1a0f2e; }
+        .lang-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.18); color: #f5efe6; }
 
         .lang-dropdown {
-          position: absolute; top: calc(100% + 6px); right: 0; z-index: 100;
-          background: white; border: 2px solid #1a0f2e; border-radius: 14px;
-          overflow: hidden; min-width: 170px;
-          box-shadow: 4px 4px 0 #1a0f2e;
+          position: absolute; top: calc(100% + 8px); right: 0; z-index: 200;
+          background: #1e1c18; border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 14px; overflow: hidden; min-width: 180px;
+          box-shadow: 0 20px 50px rgba(0,0,0,0.6);
         }
-        .lang-option {
-          width: 100%; padding: 10px 15px; border: none; cursor: pointer;
-          display: flex; align-items: center; gap: 10px;
-          font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 500;
-          transition: background .12s; background: white;
+        .lang-opt {
+          width: 100%; padding: 11px 16px; border: none; cursor: pointer;
+          background: transparent; display: flex; align-items: center; gap: 10px;
+          font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+          color: rgba(245,239,230,0.6);
+          border-bottom: 1px solid rgba(255,255,255,0.05); transition: all .12s;
         }
-        .lang-option:not(:last-child) { border-bottom: 1px solid #e8dff8; }
-        .lang-option:hover { background: #faf5eb; }
-        .lang-option.selected { background: #faf5eb; color: #4a2d78; font-weight: 700; }
+        .lang-opt:last-child { border-bottom: none; }
+        .lang-opt:hover { background: rgba(255,255,255,0.05); color: #f5efe6; }
+        .lang-opt.sel { color: #e8714a; }
 
-        /* Waveform bars */
-        .wave-container {
-          display: flex; align-items: center; gap: 3px; height: 28px;
+        /* ── 3D Mic button ── */
+        .mic-btn {
+          width: 88px; height: 88px; border-radius: 50%;
+          border: none; cursor: pointer; position: relative;
+          display: flex; align-items: center; justify-content: center;
+          transition: transform 0.22s cubic-bezier(.34,1.56,.64,1),
+                      box-shadow 0.22s ease;
         }
-        .wv-bar {
-          width: 3px; border-radius: 2px;
-          background: linear-gradient(180deg, #c9a7ff, #4a2d78);
-          transform-origin: bottom;
+        .mic-btn-idle {
+          background: radial-gradient(circle at 35% 35%, #2a2724, #1a1816);
+          box-shadow: 0 0 0 1px rgba(255,255,255,0.1),
+                      0 8px 32px rgba(0,0,0,0.5),
+                      inset 0 1px 0 rgba(255,255,255,0.08);
+        }
+        .mic-btn-idle:hover {
+          transform: scale(1.07) translateY(-2px);
+          box-shadow: 0 0 0 1px rgba(232,113,74,0.4),
+                      0 12px 40px rgba(232,113,74,0.2),
+                      inset 0 1px 0 rgba(255,255,255,0.08);
+        }
+        .mic-btn-rec {
+          background: radial-gradient(circle at 35% 35%, #c06040, #8a3a20);
+          box-shadow: 0 0 0 1px rgba(232,113,74,0.6),
+                      0 8px 32px rgba(232,113,74,0.35),
+                      inset 0 1px 0 rgba(255,255,255,0.12);
+          animation: pulse-ring 1.5s ease-in-out infinite;
+        }
+        .mic-btn-rec:hover { transform: scale(1.04); }
+        .mic-btn-rec:active { transform: scale(0.96); }
+        .mic-btn::before {
+          content: ''; position: absolute; inset: 0; border-radius: 50%;
+          background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 55%);
+          pointer-events: none;
         }
 
-        /* Audio player */
-        .audio-player {
+        /* ── Audio player ── */
+        .player {
           display: flex; align-items: center; gap: 12px; padding: 12px 16px;
-          background: #faf5eb; border: 2px solid #1a0f2e; border-radius: 14px;
-          box-shadow: 3px 3px 0 #1a0f2e;
-          width: 100%;
+          background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 12px; width: 100%;
         }
         .play-btn {
-          background: #4a2d78; border: 2px solid #1a0f2e; border-radius: 8px;
-          width: 32px; height: 32px;
+          width: 32px; height: 32px; border-radius: 8px;
+          background: rgba(232,113,74,0.15); border: 1px solid rgba(232,113,74,0.3);
           display: flex; align-items: center; justify-content: center;
-          cursor: pointer; box-shadow: 2px 2px 0 #1a0f2e; flex-shrink: 0;
-          transition: all .14s;
+          cursor: pointer; flex-shrink: 0; transition: all .15s;
+          color: #e8714a;
         }
-        .play-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 #1a0f2e; }
-        .play-btn:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 #1a0f2e; }
+        .play-btn:hover { background: rgba(232,113,74,0.25); }
 
-        /* Transcript textarea */
-        .transcript-area {
+        /* ── Shared btns ── */
+        .btn-ghost {
+          width: 100%; border-radius: 12px; padding: 12px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.1);
+          color: rgba(245,239,230,0.55); cursor: pointer;
+          font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 13px;
+          display: flex; align-items: center; justify-content: center; gap: 7px;
+          transition: all .18s;
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.08); color: #f5efe6; border-color: rgba(255,255,255,0.18); }
+
+        .btn-primary {
+          width: 100%; border-radius: 12px; padding: 14px;
+          background: #e8714a; border: none;
+          color: white; cursor: pointer;
+          font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 14px;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+          transition: all .18s;
+          box-shadow: 0 4px 20px rgba(232,113,74,0.35);
+        }
+        .btn-primary:hover { background: #f08460; box-shadow: 0 6px 28px rgba(232,113,74,0.45); transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); box-shadow: 0 2px 12px rgba(232,113,74,0.3); }
+
+        /* ── Transcript textarea ── */
+        .tx-area {
           width: 100%; padding: 14px 16px; border-radius: 12px; resize: vertical;
-          background: white; border: 2px solid #e8dff8;
-          color: #1a0f2e; font-size: 13px; line-height: 1.8; outline: none;
-          font-family: 'DM Sans', sans-serif;
-          box-shadow: 2px 2px 0 #e8dff8;
-          transition: border-color 0.15s, box-shadow 0.15s;
+          background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+          color: #f5efe6; font-size: 13.5px; line-height: 1.8; outline: none;
+          font-family: 'DM Sans', sans-serif; transition: border-color .15s;
+          min-height: 120px;
         }
-        .transcript-area:focus {
-          border-color: #4a2d78;
-          box-shadow: 2px 2px 0 #4a2d78;
-        }
+        .tx-area:focus { border-color: rgba(232,113,74,0.4); }
+        .tx-area::placeholder { color: rgba(245,239,230,0.2); }
 
-        /* Error box */
-        .error-box {
+        /* ── Error ── */
+        .err-box {
           width: 100%; padding: 11px 15px; border-radius: 10px;
-          background: #fef2f2; border: 2px solid #fecaca;
-          color: #b91c1c; font-size: 12.5px; font-weight: 500;
-          box-shadow: 2px 2px 0 #fecaca;
+          background: rgba(185,28,28,0.1); border: 1px solid rgba(185,28,28,0.3);
+          color: #fca5a5; font-size: 12.5px; font-weight: 500;
+          font-family: 'DM Sans', sans-serif;
         }
 
-        /* Transcribing spinner */
-        .transcribing-wrap {
-          display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 16px 0;
-        }
-        .spin-outer {
-          width: 48px; height: 48px; border-radius: 50%;
-          border: 3px solid #ede5ff; border-top: 3px solid #4a2d78;
+        /* ── Spinner ── */
+        .big-spin {
+          width: 44px; height: 44px; border-radius: 50%;
+          border: 2px solid rgba(255,255,255,0.06);
+          border-top: 2px solid #e8714a;
           animation: spin 0.9s linear infinite;
         }
       `}</style>
@@ -279,40 +257,37 @@ export default function Recorder({ onResults, onLoading }) {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, width: '100%' }}>
         <AnimatePresence mode="wait">
 
-          {/* ── IDLE + RECORDING ── */}
+          {/* ── IDLE / RECORDING ── */}
           {(stage === 'idle' || stage === 'recording') && (
             <motion.div key="mic"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, width: '100%' }}
             >
-              {/* Language selector */}
+              {/* Language */}
               {stage === 'idle' && (
                 <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', position: 'relative' }}>
                   <button className="lang-btn" onClick={() => setLangOpen(o => !o)}>
                     <span>{language.flag}</span>
                     <span>{language.label}</span>
-                    <motion.span animate={{ rotate: langOpen ? 180 : 0 }} transition={{ duration: 0.18 }}>
-                      <ChevronDown size={12} color="#8070a0" />
+                    <motion.span animate={{ rotate: langOpen ? 180 : 0 }} transition={{ duration: .18 }}>
+                      <ChevronDown size={12} />
                     </motion.span>
                   </button>
-
                   <AnimatePresence>
                     {langOpen && (
                       <motion.div className="lang-dropdown"
-                        initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                        initial={{ opacity: 0, y: -8, scale: .96 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                        transition={{ duration: 0.15 }}
+                        exit={{ opacity: 0, y: -8, scale: .96 }}
+                        transition={{ duration: .15 }}
                       >
                         {LANGUAGES.map(lang => (
-                          <button key={lang.label}
-                            className={`lang-option ${language.label === lang.label ? 'selected' : ''}`}
-                            onClick={() => { setLanguage(lang); setLangOpen(false) }}
-                          >
-                            <span style={{ fontSize: 15 }}>{lang.flag}</span>
+                          <button key={lang.label} className={`lang-opt ${language.label === lang.label ? 'sel' : ''}`}
+                            onClick={() => { setLanguage(lang); setLangOpen(false) }}>
+                            <span style={{ fontSize: 14 }}>{lang.flag}</span>
                             <span>{lang.label}</span>
                             {language.label === lang.label && (
-                              <span style={{ marginLeft: 'auto', color: '#4a2d78', fontSize: 11, fontWeight: 800 }}>✓</span>
+                              <span style={{ marginLeft: 'auto', fontSize: 10 }}>✓</span>
                             )}
                           </button>
                         ))}
@@ -322,56 +297,50 @@ export default function Recorder({ onResults, onLoading }) {
                 </div>
               )}
 
-              {/* 3D Mic button */}
+              {/* Mic */}
               <motion.button
-                className={`mic-3d ${stage === 'recording' ? 'mic-3d-rec' : 'mic-3d-idle'}`}
+                className={`mic-btn ${stage === 'recording' ? 'mic-btn-rec' : 'mic-btn-idle'}`}
                 onClick={stage === 'recording' ? stopRecording : startRecording}
-                whileHover={{ scale: 1.06 }}
-                whileTap={{ scale: 0.94 }}
+                whileTap={{ scale: 0.93 }}
               >
                 {stage === 'recording'
-                  ? <Square size={22} color="white" fill="white" style={{ position: 'relative', zIndex: 2 }} />
-                  : <Mic    size={26} color="#4a2d78" strokeWidth={1.8} style={{ position: 'relative', zIndex: 2 }} />
+                  ? <Square size={20} color="white" fill="white" style={{ position: 'relative', zIndex: 1 }} />
+                  : <Mic    size={26} color="rgba(245,239,230,0.85)" strokeWidth={1.5} style={{ position: 'relative', zIndex: 1 }} />
                 }
               </motion.button>
 
-              {/* Status text */}
               {stage === 'recording' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <motion.div
-                      style={{ width: 6, height: 6, borderRadius: '50%', background: '#4a2d78' }}
-                      animate={{ opacity: [1, 0.2, 1] }}
-                      transition={{ duration: 1, repeat: Infinity }}
-                    />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <motion.div style={{ width: 6, height: 6, borderRadius: '50%', background: '#e8714a' }}
+                      animate={{ opacity: [1, 0.2, 1] }} transition={{ duration: 1, repeat: Infinity }} />
                     <span style={{
-                      fontSize: 16, fontWeight: 700, color: '#1a0f2e',
-                      fontFamily: "'Unbounded', sans-serif",
-                      letterSpacing: '0.04em', fontVariantNumeric: 'tabular-nums',
+                      fontFamily: "'Playfair Display', serif",
+                      fontSize: 20, fontWeight: 700, fontStyle: 'italic',
+                      color: '#f5efe6', letterSpacing: '0.02em',
                     }}>
                       {fmt(recTime)}
                     </span>
                   </div>
-
-                  {/* Rainbow waveform */}
-                  <div className="wave-container">
-                    {['#ff8c69','#ffd166','#85e89d','#74c7f5','#c9a7ff','#ffadd2','#ff8c69','#ffd166','#85e89d','#74c7f5','#c9a7ff','#ffadd2'].map((color, i) => (
-                      <motion.div key={i} className="wv-bar"
-                        style={{ background: color }}
-                        animate={{ height: [4, Math.random() * 20 + 4, 4] }}
-                        transition={{ duration: 0.4 + Math.random() * 0.3, repeat: Infinity, delay: i * 0.07, ease: 'easeInOut' }}
+                  {/* Waveform */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 3, height: 24 }}>
+                    {['#e8714a','#d4a853','#7aab8a','#6499b8','#e8714a','#d4a853','#7aab8a','#6499b8','#e8714a','#d4a853','#7aab8a','#6499b8'].map((c, i) => (
+                      <motion.div key={i} style={{ width: 3, borderRadius: 2, background: c, opacity: 0.7 }}
+                        animate={{ height: [3, Math.random() * 18 + 3, 3] }}
+                        transition={{ duration: 0.38 + Math.random() * 0.3, repeat: Infinity, delay: i * 0.065, ease: 'easeInOut' }}
                       />
                     ))}
                   </div>
-
-                  <span style={{ fontSize: 11, color: '#8070a0', letterSpacing: '.04em', fontWeight: 500 }}>
-                    {language.flag} {language.label} · tap square to stop
+                  <span style={{ fontSize: 11, color: 'rgba(245,239,230,0.35)', letterSpacing: '.06em', fontWeight: 500, textTransform: 'uppercase' }}>
+                    {language.flag} {language.label} · tap to stop
                   </span>
                 </div>
               ) : (
                 <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontSize: 14, color: '#3d2f5a', fontWeight: 500 }}>Tap to record your note</p>
-                  <p style={{ fontSize: 11, color: '#8070a0', marginTop: 5, letterSpacing: '.03em' }}>
+                  <p style={{ fontSize: 14, color: 'rgba(245,239,230,0.5)', fontWeight: 400 }}>
+                    Tap to start recording
+                  </p>
+                  <p style={{ fontSize: 11, color: 'rgba(245,239,230,0.25)', marginTop: 5, letterSpacing: '.04em' }}>
                     {language.flag} {language.label}
                   </p>
                 </div>
@@ -382,58 +351,49 @@ export default function Recorder({ onResults, onLoading }) {
           {/* ── PREVIEW ── */}
           {stage === 'preview' && (
             <motion.div key="preview"
-              initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+              initial={{ opacity: 0, scale: .97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
               transition={sp}
               style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 11, color: '#8070a0', fontWeight: 500 }}>Recording · {fmt(recTime)}</span>
-                <span style={{
-                  fontSize: 11, padding: '3px 11px', borderRadius: 99,
-                  background: '#faf5eb', border: '2px solid #1a0f2e',
-                  color: '#3d2f5a', fontWeight: 600,
-                  boxShadow: '1px 1px 0 #1a0f2e',
-                }}>
+                <span style={{ fontSize: 11, color: 'rgba(245,239,230,0.35)', fontWeight: 500, letterSpacing: '.04em' }}>
+                  Recording · {fmt(recTime)}
+                </span>
+                <span style={{ fontSize: 11, color: 'rgba(245,239,230,0.35)', padding: '3px 10px',
+                  borderRadius: 99, border: '1px solid rgba(255,255,255,0.1)' }}>
                   {language.flag} {language.label}
                 </span>
               </div>
 
               <audio ref={audioRef} src={audioUrl} onEnded={() => setIsPlaying(false)} style={{ display: 'none' }} />
-
-              <div className="audio-player">
+              <div className="player">
                 <button className="play-btn" onClick={() => {
                   if (isPlaying) { audioRef.current?.pause(); setIsPlaying(false) }
                   else { audioRef.current?.play(); setIsPlaying(true) }
                 }}>
-                  {isPlaying ? <Pause size={13} color="white" /> : <Play size={13} color="white" />}
+                  {isPlaying ? <Pause size={13} /> : <Play size={13} />}
                 </button>
-                <div style={{ flex: 1, height: 4, borderRadius: 99, background: '#e8dff8', overflow: 'hidden', border: '1px solid #d8c8f0' }}>
-                  <motion.div
-                    style={{ height: '100%', borderRadius: 99, background: 'linear-gradient(90deg, #c9a7ff, #4a2d78)' }}
+                <div style={{ flex: 1, height: 2, borderRadius: 99, background: 'rgba(255,255,255,0.08)' }}>
+                  <motion.div style={{ height: '100%', borderRadius: 99, background: 'linear-gradient(90deg,#e8714a,#d4a853)' }}
                     animate={{ width: isPlaying ? '100%' : '0%' }}
-                    transition={{ duration: recTime, ease: 'linear' }}
-                  />
+                    transition={{ duration: recTime, ease: 'linear' }} />
                 </div>
-                <span style={{ fontSize: 11, color: '#8070a0', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
+                <span style={{ fontSize: 11, color: 'rgba(245,239,230,0.35)', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
                   {fmt(recTime)}
                 </span>
               </div>
 
-              <motion.button className="rec-btn" onClick={reset} whileTap={{ scale: .97 }}
-                style={{ ...btnBase, height: 44 }}>
+              <motion.button className="btn-ghost" onClick={reset} whileTap={{ scale: .98 }}>
                 <Trash2 size={13} /> Re-record
               </motion.button>
-
-              <motion.button className="rec-btn" onClick={summarizeDirectly} whileTap={{ scale: .97 }}
-                style={{ ...primaryBtn, height: 50 }}>
-                <Sparkles size={15} /> Summarize Note
+              <motion.button className="btn-primary" onClick={summarizeDirectly} whileTap={{ scale: .98 }}>
+                <Sparkles size={14} /> Summarize Note
               </motion.button>
-
               <button onClick={transcribeAudio} style={{
                 background: 'none', border: 'none', cursor: 'pointer', fontSize: 12,
-                color: '#8070a0', fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
-                textDecoration: 'underline', textDecorationColor: '#d8c8f0',
-                textUnderlineOffset: 3, marginTop: -4, textAlign: 'center',
+                color: 'rgba(245,239,230,0.3)', fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
+                textDecoration: 'underline', textDecorationColor: 'rgba(255,255,255,0.1)',
+                textUnderlineOffset: 3, textAlign: 'center', marginTop: -4,
               }}>
                 review transcript first
               </button>
@@ -444,14 +404,14 @@ export default function Recorder({ onResults, onLoading }) {
           {stage === 'transcribing' && (
             <motion.div key="transcribing"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="transcribing-wrap"
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, padding: '20px 0' }}
             >
-              <div className="spin-outer" />
+              <div className="big-spin" />
               <div style={{ textAlign: 'center' }}>
-                <p style={{ fontSize: 13, fontWeight: 700, color: '#1a0f2e', fontFamily: "'Unbounded', sans-serif", fontSize: 11 }}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: '#f5efe6', fontFamily: "'Playfair Display', serif", fontStyle: 'italic' }}>
                   Processing in {language.label}
                 </p>
-                <p style={{ fontSize: 12, color: '#8070a0', marginTop: 5 }}>Usually a few seconds…</p>
+                <p style={{ fontSize: 12, color: 'rgba(245,239,230,0.3)', marginTop: 5 }}>Usually a few seconds…</p>
               </div>
             </motion.div>
           )}
@@ -464,31 +424,26 @@ export default function Recorder({ onResults, onLoading }) {
               style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{
-                  fontSize: 9, fontWeight: 700, color: '#8070a0',
-                  letterSpacing: '.1em', textTransform: 'uppercase',
-                  fontFamily: "'Unbounded', sans-serif",
-                }}>
+                <span style={{ fontSize: 9.5, fontWeight: 600, color: 'rgba(245,239,230,0.3)',
+                  letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: "'DM Sans',sans-serif" }}>
                   Transcript · {language.flag} {language.label}
                 </span>
-                <span style={{ fontSize: 11, color: '#c9a7ff', fontWeight: 600 }}>edit if needed</span>
+                <span style={{ fontSize: 11, color: '#e8714a', opacity: .7 }}>edit if needed</span>
               </div>
 
-              <textarea
-                className="transcript-area"
-                value={transcript}
-                onChange={e => setTranscript(e.target.value)}
-                rows={5}
+              <textarea className="tx-area"
+                value={transcript} onChange={e => setTranscript(e.target.value)} rows={5}
+                placeholder="Your transcript will appear here…"
               />
 
               <div style={{ display: 'flex', gap: 10 }}>
-                <motion.button className="rec-btn" onClick={reset} whileTap={{ scale: .97 }}
-                  style={{ ...btnBase, flex: 1, height: 46 }}>
+                <motion.button className="btn-ghost" onClick={reset} whileTap={{ scale: .98 }}
+                  style={{ flex: 1 }}>
                   <Trash2 size={13} /> Start Over
                 </motion.button>
-                <motion.button className="rec-btn" onClick={summarize} whileTap={{ scale: .97 }}
-                  style={{ ...primaryBtn, flex: 2, height: 46 }}>
-                  <Sparkles size={14} /> Summarize
+                <motion.button className="btn-primary" onClick={summarize} whileTap={{ scale: .98 }}
+                  style={{ flex: 2 }}>
+                  <Sparkles size={13} /> Summarize
                 </motion.button>
               </div>
             </motion.div>
@@ -496,12 +451,10 @@ export default function Recorder({ onResults, onLoading }) {
 
         </AnimatePresence>
 
-        {/* Error */}
         <AnimatePresence>
           {error && (
-            <motion.div className="error-box"
-              initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            >
+            <motion.div className="err-box"
+              initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               {error}
             </motion.div>
           )}

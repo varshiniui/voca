@@ -1,58 +1,67 @@
-@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --cream:  #faf5eb;
-  --coral:  #ff8c69;  --coral-lt:  #ffe8e2;
-  --yellow: #ffd166;  --yellow-lt: #fff8d6;
-  --mint:   #85e89d;  --mint-lt:   #d8f8e4;
-  --sky:    #74c7f5;  --sky-lt:    #ddf0fc;
-  --lilac:  #c9a7ff;  --lilac-lt:  #ede5ff;
-  --pink:   #ffadd2;  --pink-lt:   #ffe4f0;
-  --ink:    #1a0f2e;
-  --ink2:   #3d2f5a;
-  --ink3:   #8070a0;
+  --bg:        #0f0e0c;
+  --bg2:       #181714;
+  --bg3:       #211f1b;
+  --surface:   #272420;
+  --surface2:  #2f2c27;
+  --border:    rgba(255,255,255,0.08);
+  --border2:   rgba(255,255,255,0.14);
 
-  --text:    #1a0f2e;
-  --text2:   #3d2f5a;
-  --muted:   #8070a0;
-  --border:  #e8dff8;
-  --border2: #d8c8f0;
-  --surface: #ffffff;
-  --plum:    #4a2d78;
-  --plum-lt: #c9a7ff;
-  --paper:   #faf5eb;
+  --cream:     #f5efe6;
+  --cream2:    #e8ddd0;
+  --muted:     #8a8070;
+  --muted2:    #6a6058;
 
-  --font-display: 'Unbounded', sans-serif;
+  --coral:     #e8714a;
+  --coral2:    #f08460;
+  --amber:     #d4a853;
+  --amber2:    #e8c070;
+  --sage:      #7aab8a;
+  --sage2:     #96c4a4;
+  --sky:       #6499b8;
+
+  --font-display: 'Playfair Display', Georgia, serif;
   --font-body:    'DM Sans', sans-serif;
+
+  /* aliases for Recorder / ResultCard */
+  --text:    #f5efe6;
+  --text2:   #c8bfb0;
+  --plum:    #e8714a;
+  --plum-lt: rgba(232,113,74,0.15);
+  --paper:   #272420;
 }
 
 html, body {
-  background: #e8dcc8;
-  color: var(--ink);
+  background: var(--bg);
+  color: var(--cream);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
 }
 
-::selection { background: var(--yellow); color: var(--ink); }
+::selection { background: var(--coral); color: #fff; }
 textarea { font-family: var(--font-body); }
-::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--lilac); border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 99px; }
 
-/* ── Animations ── */
-@keyframes spin        { to { transform: rotate(360deg) } }
-@keyframes worm        { 0%{left:-40%;width:40%} 50%{left:30%;width:60%} 100%{left:110%;width:40%} }
-@keyframes marquee     { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-@keyframes blob        { 0%,100%{border-radius:60% 40% 70% 30%/50% 60% 40% 70%} 50%{border-radius:70% 30% 60% 40%/40% 70% 30% 60%} }
-@keyframes float       { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+@keyframes spin          { to { transform: rotate(360deg) } }
+@keyframes fadeUp        { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
+@keyframes worm          { 0%{left:-40%;width:40%} 50%{left:30%;width:60%} 100%{left:110%;width:40%} }
+@keyframes marquee       { from{transform:translateX(0)} to{transform:translateX(-50%)} }
 @keyframes gradientShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-@keyframes wbar        { 0%,100%{transform:scaleY(.15)} 50%{transform:scaleY(1)} }
-@keyframes recPulse    {
-  0%,100%{ box-shadow: 4px 4px 0 var(--ink), 0 0 0 0 rgba(74,45,120,.45) }
-  50%    { box-shadow: 4px 4px 0 var(--ink), 0 0 0 18px rgba(74,45,120,0) }
+@keyframes pulse-ring    {
+  0%,100% { box-shadow: 0 0 0 0 rgba(232,113,74,0.4); }
+  50%     { box-shadow: 0 0 0 16px rgba(232,113,74,0); }
+}
+@keyframes wbar { 0%,100%{transform:scaleY(.15)} 50%{transform:scaleY(1)} }
+@keyframes shimmer {
+  0%   { background-position: -200% 0 }
+  100% { background-position:  200% 0 }
 }
 
 .bar { animation: wbar .7s ease-in-out infinite; transform-origin: bottom; }

@@ -2,287 +2,256 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Copy, Check, Download, Sparkles } from 'lucide-react'
+import { Copy, Check, Download, ChevronDown } from 'lucide-react'
 
-const moodConfig = {
-  Focused:      { color: '#2d5a8e', bg: '#ddf0fc', emoji: '🎯' },
-  Excited:      { color: '#b45309', bg: '#fff8d6', emoji: '🚀' },
-  Casual:       { color: '#2d7a5a', bg: '#d8f8e4', emoji: '😊' },
-  Professional: { color: '#4a2d78', bg: '#ede5ff', emoji: '💼' },
-  Urgent:       { color: '#b91c1c', bg: '#fef2f2', emoji: '⚡' },
-  Reflective:   { color: '#1e5f74', bg: '#ddf0fc', emoji: '🌊' },
-  default:      { color: '#6b5c52', bg: '#faf5eb', emoji: '📝' },
+const moodMap = {
+  Focused:      { color: '#6499b8', label: 'Focused' },
+  Excited:      { color: '#d4a853', label: 'Excited' },
+  Casual:       { color: '#7aab8a', label: 'Casual' },
+  Professional: { color: '#c9a7ff', label: 'Professional' },
+  Urgent:       { color: '#e8714a', label: 'Urgent' },
+  Reflective:   { color: '#6499b8', label: 'Reflective' },
+  default:      { color: '#8a8070', label: 'Note' },
 }
 
-const sp = { type: 'spring', stiffness: 300, damping: 26 }
+const sp = { type: 'spring', stiffness: 300, damping: 28 }
 
 export default function ResultCard({ results }) {
-  const [copied,    setCopied]    = useState(false)
-  const [exporting, setExporting] = useState(false)
-  const [expandTx,  setExpandTx]  = useState(false)
+  const [copied,   setCopied]   = useState(false)
+  const [exporting,setExporting]= useState(false)
+  const [txOpen,   setTxOpen]   = useState(false)
 
   if (!results) return null
   const { transcription, keyPoints, actionItems, summary, mood, wordCount, timestamp } = results
-
-  const cfg      = moodConfig[mood] || moodConfig.default
-  const time     = timestamp ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
-  const date     = timestamp ? new Date(timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : ''
+  const cfg  = moodMap[mood] || moodMap.default
+  const time = timestamp ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
+  const date = timestamp ? new Date(timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : ''
 
   const copyToClipboard = async () => {
-    const text = `VOCA — Voice Note Summary\n${date} ${time}  |  Mood: ${mood}  |  ${wordCount} words\n\nSUMMARY\n${summary}\n\nKEY POINTS\n${keyPoints?.map((p, i) => `${i + 1}. ${p}`).join('\n')}\n\nACTION ITEMS\n${actionItems?.map(a => `• ${a}`).join('\n')}\n\nTRANSCRIPT\n"${transcription}"`
+    const text = `Voca — Voice Note\n${date} ${time}  ·  ${wordCount} words\n\nSUMMARY\n${summary}\n\nKEY POINTS\n${keyPoints?.map((p,i)=>`${i+1}. ${p}`).join('\n')}\n\nACTION ITEMS\n${actionItems?.map(a=>`• ${a}`).join('\n')}\n\nTRANSCRIPT\n"${transcription}"`
     await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2500)
+    setCopied(true); setTimeout(() => setCopied(false), 2500)
   }
 
   const exportPDF = () => {
     setExporting(true)
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Voca Note</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=DM+Sans:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@400;500;600&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'DM Sans',sans-serif;background:#faf5eb;color:#1a0f2e;padding:52px 56px;max-width:680px;margin:0 auto}
-.header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:36px;padding-bottom:20px;border-bottom:2px solid #1a0f2e}
-.logo{font-family:'Unbounded',sans-serif;font-size:24px;font-weight:900;color:#1a0f2e;letter-spacing:-.03em}
-.meta{font-size:11px;color:#8070a0;text-align:right;line-height:1.7;font-weight:500}
-.mood{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:99px;font-size:11px;font-weight:700;border:2px solid currentColor;margin-bottom:24px;letter-spacing:0.04em;font-family:'Unbounded',sans-serif;font-size:9px}
-.section{margin-bottom:24px}
-.label{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8070a0;margin-bottom:10px;font-family:'Unbounded',sans-serif}
-.summary-text{font-size:14px;line-height:1.85;color:#1a0f2e}
-.item{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
-.num{width:20px;height:20px;border-radius:6px;background:#ede5ff;color:#4a2d78;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;border:1.5px solid #1a0f2e;font-family:'Unbounded',sans-serif}
-.dot{width:6px;height:6px;border-radius:2px;background:#c9a7ff;flex-shrink:0;margin-top:7px;border:1px solid #1a0f2e}
-.item-text{font-size:13px;color:#3d2f5a;line-height:1.7}
-.transcript-box{background:white;border-radius:14px;padding:16px 18px;border:2px solid #e8dff8}
-.transcript-text{font-size:12px;color:#8070a0;line-height:1.9;font-style:italic}
-.divider{height:2px;background:#e8dff8;margin:22px 0;border-radius:99px}
-.footer{text-align:center;font-size:8px;color:#c9a7ff;letter-spacing:0.15em;font-weight:700;margin-top:40px;font-family:'Unbounded',sans-serif}
+body{font-family:'DM Sans',sans-serif;background:#f9f6f2;color:#1a1714;padding:56px 64px;max-width:680px;margin:0 auto}
+.header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:40px;padding-bottom:24px;border-bottom:2px solid #1a1714}
+.logo{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;font-style:italic;color:#1a1714}
+.meta{font-size:11px;color:#8a8070;text-align:right;line-height:1.7;font-weight:500}
+.mood{display:inline-block;padding:4px 14px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:28px;background:#f0ebe4;color:#1a1714}
+.label{font-size:9px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#8a8070;margin-bottom:12px}
+.summary{font-size:15px;line-height:1.85;color:#1a1714;margin-bottom:32px;padding:18px 20px;background:#f0ebe4;border-radius:8px}
+.kp{display:flex;gap:12px;margin-bottom:10px;align-items:flex-start}
+.kp-num{width:22px;height:22px;border-radius:4px;background:#1a1714;color:#f9f6f2;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.kp-text{font-size:13.5px;color:#3d3530;line-height:1.7}
+.ai-item{display:flex;gap:12px;margin-bottom:10px;align-items:flex-start}
+.ai-box{width:16px;height:16px;border:1.5px solid #c8bfb0;border-radius:3px;flex-shrink:0;margin-top:2px}
+.divider{height:1.5px;background:#e8e0d6;margin:24px 0}
+.tx{font-size:12px;color:#8a8070;line-height:1.9;font-style:italic;padding:14px 18px;background:#f0ebe4;border-radius:8px}
+.footer{text-align:center;font-size:9px;color:#c8bfb0;letter-spacing:0.14em;font-weight:600;margin-top:48px;text-transform:uppercase}
 </style></head><body>
 <div class="header">
-  <div class="logo">V●CA</div>
-  <div class="meta">${date || 'Today'}<br/>${time || ''} ${wordCount ? `· ${wordCount} words` : ''}</div>
+  <div class="logo">Voca</div>
+  <div class="meta">${date || ''}<br/>${time || ''} ${wordCount ? `· ${wordCount} words` : ''}</div>
 </div>
-<div class="mood" style="color:${cfg.color};border-color:${cfg.color};background:${cfg.bg}">${cfg.emoji} ${mood || 'Note'}</div>
-<div class="section"><div class="label">Summary</div><p class="summary-text">${summary}</p></div>
+<div class="mood">${mood || 'Note'}</div>
+<div class="label">Summary</div>
+<div class="summary">${summary}</div>
 <div class="divider"></div>
-<div class="section"><div class="label">Key Points</div>${keyPoints?.map((p,i)=>`<div class="item"><div class="num">${i+1}</div><span class="item-text">${p}</span></div>`).join('')}</div>
+<div class="label">Key Points</div>
+<div style="margin-bottom:28px">${keyPoints?.map((p,i)=>`<div class="kp"><div class="kp-num">${i+1}</div><span class="kp-text">${p}</span></div>`).join('')}</div>
 <div class="divider"></div>
-<div class="section"><div class="label">Action Items</div>${actionItems?.map(a=>`<div class="item"><div class="dot"></div><span class="item-text">${a}</span></div>`).join('')}</div>
+<div class="label">Action Items</div>
+<div style="margin-bottom:28px">${actionItems?.map(a=>`<div class="ai-item"><div class="ai-box"></div><span class="kp-text">${a}</span></div>`).join('')}</div>
 <div class="divider"></div>
-<div class="transcript-box"><div class="label" style="margin-bottom:10px">Original Transcript</div><p class="transcript-text">"${transcription}"</p></div>
-<div class="footer">VOCA · VOICE NOTE SUMMARIZER</div>
+<div class="label" style="margin-bottom:10px">Original Transcript</div>
+<div class="tx">"${transcription}"</div>
+<div class="footer">Voca · Voice Note Summarizer</div>
 <script>window.onload=()=>{window.print();window.onafterprint=()=>window.close()}</script>
 </body></html>`
-    const blob  = new Blob([html], { type: 'text/html' })
-    const url   = URL.createObjectURL(blob)
-    const popup = window.open(url, '_blank', 'width=800,height=900')
-    if (!popup) { const a = document.createElement('a'); a.href = url; a.download = 'voca-note.html'; a.click() }
+    const blob = new Blob([html], { type: 'text/html' })
+    const url  = URL.createObjectURL(blob)
+    const pop  = window.open(url, '_blank', 'width=800,height=900')
+    if (!pop) { const a = document.createElement('a'); a.href=url; a.download='voca-note.html'; a.click() }
     setTimeout(() => { URL.revokeObjectURL(url); setExporting(false) }, 2000)
   }
+
+  const Label = ({ children }) => (
+    <p style={{
+      fontSize: 9, fontWeight: 600, color: 'rgba(245,239,230,0.3)',
+      letterSpacing: '.14em', textTransform: 'uppercase', marginBottom: 12,
+      fontFamily: "'DM Sans',sans-serif",
+      display: 'flex', alignItems: 'center', gap: 8,
+    }}>
+      <span style={{ display: 'inline-block', width: 2, height: 10, borderRadius: 2, background: 'rgba(245,239,230,0.2)' }} />
+      {children}
+    </p>
+  )
+
+  const Divider = () => (
+    <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '18px 0' }} />
+  )
 
   return (
     <>
       <style>{`
-        .rc-section-label {
-          font-size: 9px; font-weight: 700; color: #8070a0;
-          letter-spacing: 0.12em; text-transform: uppercase;
-          margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
-          font-family: 'Unbounded', sans-serif;
-        }
-        .rc-section-label::before {
-          content: ''; width: 3px; height: 12px; border-radius: 2px;
-          background: currentColor; flex-shrink: 0;
-        }
-
-        .rc-divider {
-          height: 1.5px;
-          background: linear-gradient(90deg, #e8dff8, transparent);
-          margin: 18px 0;
-        }
-
-        /* Key point item */
-        .kp-item {
+        .kp-row {
           display: flex; align-items: flex-start; gap: 10px;
-          padding: 9px 12px; border-radius: 12px;
-          border: 1.5px solid #e8dff8;
-          background: white; margin-bottom: 7px;
+          padding: 10px 12px; border-radius: 10px; margin-bottom: 6px;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.06);
           transition: all .15s;
-          box-shadow: 2px 2px 0 #e8dff8;
         }
-        .kp-item:hover {
-          border-color: #d8c8f0;
-          box-shadow: 2px 2px 0 #d8c8f0;
-          transform: translate(-1px,-1px);
-        }
+        .kp-row:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
         .kp-num {
-          flex-shrink: 0; width: 20px; height: 20px; border-radius: 7px;
-          background: #ede5ff; border: 1.5px solid #1a0f2e;
-          color: #4a2d78; font-size: 9px; font-weight: 800;
+          flex-shrink: 0; width: 20px; height: 20px; border-radius: 5px;
+          background: rgba(232,113,74,0.15); border: 1px solid rgba(232,113,74,0.25);
+          color: #e8714a; font-size: 9px; font-weight: 700;
           display: flex; align-items: center; justify-content: center;
-          margin-top: 1px; box-shadow: 1px 1px 0 #1a0f2e;
-          font-family: 'Unbounded', sans-serif;
+          margin-top: 1px; font-family: 'DM Sans', sans-serif;
         }
-
-        /* Action item */
-        .ai-item {
+        .ai-row {
           display: flex; align-items: flex-start; gap: 10px;
-          padding: 9px 12px; border-radius: 12px;
-          border: 1.5px solid #e8dff8; background: white;
-          margin-bottom: 7px; transition: all .15s;
-          box-shadow: 2px 2px 0 #e8dff8;
+          padding: 10px 12px; border-radius: 10px; margin-bottom: 6px;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.06);
+          transition: all .15s;
         }
-        .ai-item:hover {
-          border-color: #85e89d;
-          box-shadow: 2px 2px 0 #85e89d;
-          transform: translate(-1px,-1px);
-        }
+        .ai-row:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
         .ai-check {
-          flex-shrink: 0; width: 18px; height: 18px; border-radius: 5px;
-          border: 2px solid #1a0f2e; background: white;
-          display: flex; align-items: center; justify-content: center;
-          margin-top: 1px; cursor: pointer; transition: all .15s;
-          box-shadow: 1px 1px 0 #1a0f2e;
+          flex-shrink: 0; width: 16px; height: 16px; border-radius: 4px;
+          border: 1.5px solid rgba(122,171,138,0.4); margin-top: 2px;
+          transition: all .15s; cursor: pointer;
         }
-        .ai-check:hover { background: #d8f8e4; border-color: #2a7a4a; }
+        .ai-check:hover { border-color: rgba(122,171,138,0.8); background: rgba(122,171,138,0.1); }
 
-        /* Transcript accordion */
         .tx-toggle {
-          width: 100%; background: #faf5eb; border: 1.5px solid #e8dff8;
-          border-radius: 10px; padding: 10px 14px;
-          cursor: pointer; display: flex; align-items: center; justify-content: space-between;
-          font-family: 'Unbounded', sans-serif; font-size: 8.5px; font-weight: 700;
-          color: #8070a0; letter-spacing: .1em; text-transform: uppercase;
-          transition: all .15s; box-shadow: 2px 2px 0 #e8dff8;
+          width: 100%; background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.07); border-radius: 10px;
+          padding: 10px 14px; cursor: pointer;
+          display: flex; align-items: center; justify-content: space-between;
+          color: rgba(245,239,230,0.3); font-size: 9.5px; font-weight: 600;
+          letter-spacing: .1em; text-transform: uppercase;
+          font-family: 'DM Sans', sans-serif; transition: all .15s;
         }
-        .tx-toggle:hover { background: white; border-color: #d8c8f0; }
-        .tx-content {
-          margin-top: 8px; padding: 14px 16px; border-radius: 10px;
-          background: white; border: 1.5px solid #e8dff8;
-          font-size: 12.5px; color: #8070a0; line-height: 1.9;
-          font-style: italic; box-shadow: 2px 2px 0 #e8dff8;
-        }
+        .tx-toggle:hover { background: rgba(255,255,255,0.06); color: rgba(245,239,230,0.55); }
 
-        /* Action buttons */
         .rc-btn-copy {
           flex: 1; height: 42px; border-radius: 10px; cursor: pointer;
           font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 12.5px;
           display: flex; align-items: center; justify-content: center; gap: 6px;
-          border: 2px solid #1a0f2e; transition: all .14s;
-          box-shadow: 2px 2px 0 #1a0f2e;
+          background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+          color: rgba(245,239,230,0.55); transition: all .18s;
         }
-        .rc-btn-copy:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 #1a0f2e; }
-        .rc-btn-copy:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 #1a0f2e; }
+        .rc-btn-copy:hover { background: rgba(255,255,255,0.09); color: #f5efe6; }
+        .rc-btn-copy.copied { background: rgba(122,171,138,0.12); border-color: rgba(122,171,138,0.3); color: #7aab8a; }
+
         .rc-btn-export {
           flex: 1; height: 42px; border-radius: 10px; cursor: pointer;
-          font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 12.5px;
+          font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 12.5px;
           display: flex; align-items: center; justify-content: center; gap: 6px;
-          background: #4a2d78; color: white; border: 2px solid #1a0f2e;
-          transition: all .14s; box-shadow: 2px 2px 0 #1a0f2e;
+          background: #e8714a; border: none; color: white; transition: all .18s;
+          box-shadow: 0 4px 16px rgba(232,113,74,0.3);
         }
-        .rc-btn-export:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 #1a0f2e; }
-        .rc-btn-export:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 #1a0f2e; }
-        .rc-btn-export:disabled { opacity: .6; cursor: default; transform: none; }
+        .rc-btn-export:hover { background: #f08460; box-shadow: 0 6px 24px rgba(232,113,74,0.4); }
+        .rc-btn-export:disabled { opacity: .5; cursor: default; }
       `}</style>
 
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
 
-        {/* Mood + meta row */}
+        {/* Mood + meta */}
         <motion.div
-          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...sp, delay: 0.05 }}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}
+          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...sp, delay: .05 }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}
         >
           <span style={{
-            fontSize: 10, fontWeight: 700, padding: '5px 14px', borderRadius: 99,
-            color: cfg.color, background: cfg.bg,
-            border: `2px solid ${cfg.color}`,
-            boxShadow: `2px 2px 0 ${cfg.color}`,
-            fontFamily: "'Unbounded', sans-serif",
-            letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 5,
+            fontSize: 9.5, fontWeight: 600, padding: '4px 12px', borderRadius: 4,
+            color: cfg.color, background: `${cfg.color}15`,
+            border: `1px solid ${cfg.color}30`,
+            letterSpacing: '.1em', textTransform: 'uppercase',
+            fontFamily: "'DM Sans', sans-serif",
           }}>
-            {cfg.emoji} {mood || 'Note'}
+            {mood || 'Note'}
           </span>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            {wordCount && (
-              <span style={{
-                fontSize: 10, color: '#8070a0', fontWeight: 600,
-                background: '#faf5eb', border: '1.5px solid #e8dff8',
-                padding: '3px 10px', borderRadius: 99,
-              }}>
-                {wordCount} words
-              </span>
-            )}
-            {time && (
-              <span style={{ fontSize: 11, color: '#8070a0', fontWeight: 500 }}>{time}</span>
-            )}
+          <div style={{ display: 'flex', gap: 12 }}>
+            {wordCount && <span style={{ fontSize: 11, color: 'rgba(245,239,230,0.3)', fontWeight: 500 }}>{wordCount} words</span>}
+            {time && <span style={{ fontSize: 11, color: 'rgba(245,239,230,0.25)' }}>{time}</span>}
           </div>
         </motion.div>
 
         {/* Summary */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...sp, delay: 0.08 }}>
-          <p className="rc-section-label">Summary</p>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...sp, delay: .08 }}>
+          <Label>Summary</Label>
           <p style={{
-            fontSize: 14, color: '#1a0f2e', lineHeight: 1.85, fontWeight: 400,
-            padding: '14px 16px', background: '#faf5eb',
-            border: '1.5px solid #e8dff8', borderRadius: 14,
-            boxShadow: '2px 2px 0 #e8dff8',
+            fontSize: 14, color: '#f5efe6', lineHeight: 1.85, fontWeight: 400,
+            padding: '14px 16px',
+            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 12, marginBottom: 2,
+            fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
           }}>
             {summary}
           </p>
         </motion.div>
 
-        <div className="rc-divider" />
+        <Divider />
 
         {/* Key Points */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...sp, delay: 0.12 }}>
-          <p className="rc-section-label">Key Points</p>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...sp, delay: .12 }}>
+          <Label>Key Points</Label>
           {keyPoints?.map((pt, i) => (
-            <motion.div key={i} className="kp-item"
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ ...sp, delay: 0.14 + i * 0.06 }}
-            >
+            <motion.div key={i} className="kp-row"
+              initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+              transition={{ ...sp, delay: .14 + i * .06 }}>
               <span className="kp-num">{i + 1}</span>
-              <span style={{ color: '#3d2f5a', fontSize: 13, lineHeight: 1.7 }}>{pt}</span>
+              <span style={{ color: 'rgba(245,239,230,0.7)', fontSize: 13, lineHeight: 1.7 }}>{pt}</span>
             </motion.div>
           ))}
         </motion.div>
 
-        <div className="rc-divider" />
+        <Divider />
 
         {/* Action Items */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...sp, delay: 0.16 }}>
-          <p className="rc-section-label">Action Items</p>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...sp, delay: .16 }}>
+          <Label>Action Items</Label>
           {actionItems?.map((item, i) => (
-            <motion.div key={i} className="ai-item"
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ ...sp, delay: 0.18 + i * 0.06 }}
-            >
+            <motion.div key={i} className="ai-row"
+              initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+              transition={{ ...sp, delay: .18 + i * .06 }}>
               <div className="ai-check" />
-              <span style={{ color: '#3d2f5a', fontSize: 13, lineHeight: 1.7 }}>{item}</span>
+              <span style={{ color: 'rgba(245,239,230,0.7)', fontSize: 13, lineHeight: 1.7 }}>{item}</span>
             </motion.div>
           ))}
         </motion.div>
 
-        <div className="rc-divider" />
+        <Divider />
 
         {/* Transcript accordion */}
         <div>
-          <button className="tx-toggle" onClick={() => setExpandTx(v => !v)}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Sparkles size={10} /> Original Transcript
-            </span>
-            <motion.span animate={{ rotate: expandTx ? 180 : 0 }} transition={{ duration: .2 }}>▾</motion.span>
+          <button className="tx-toggle" onClick={() => setTxOpen(v => !v)}>
+            <span>Original Transcript</span>
+            <motion.span animate={{ rotate: txOpen ? 180 : 0 }} transition={{ duration: .2 }}>
+              <ChevronDown size={12} />
+            </motion.span>
           </button>
           <AnimatePresence>
-            {expandTx && (
-              <motion.div className="tx-content"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: .22 }}
+            {txOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }} transition={{ duration: .22 }}
+                style={{ overflow: 'hidden' }}
               >
-                "{transcription}"
+                <p style={{
+                  marginTop: 8, padding: '14px 16px', borderRadius: 10,
+                  background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                  color: 'rgba(245,239,230,0.4)', fontSize: 12.5, lineHeight: 1.9, fontStyle: 'italic',
+                }}>
+                  "{transcription}"
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -290,33 +259,22 @@ body{font-family:'DM Sans',sans-serif;background:#faf5eb;color:#1a0f2e;padding:5
 
         {/* Buttons */}
         <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-          <motion.button className="rc-btn-copy" onClick={copyToClipboard} whileTap={{ scale: .97 }}
-            style={{
-              background: copied ? '#d8f8e4' : 'white',
-              borderColor: copied ? '#2a7a4a' : '#1a0f2e',
-              color: copied ? '#2a7a4a' : '#3d2f5a',
-              boxShadow: copied ? '2px 2px 0 #2a7a4a' : '2px 2px 0 #1a0f2e',
-            }}
-          >
+          <motion.button className={`rc-btn-copy ${copied ? 'copied' : ''}`}
+            onClick={copyToClipboard} whileTap={{ scale: .97 }}>
             <AnimatePresence mode="wait">
               {copied
-                ? <motion.span key="c" initial={{ opacity: 0, scale: .8 }} animate={{ opacity: 1, scale: 1 }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Check size={12} /> Copied!
-                  </motion.span>
-                : <motion.span key="u" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Copy size={12} /> Copy
-                  </motion.span>
+                ? <motion.span key="c" initial={{opacity:0,scale:.8}} animate={{opacity:1,scale:1}}
+                    style={{display:'flex',alignItems:'center',gap:5}}><Check size={12}/>Copied</motion.span>
+                : <motion.span key="u" initial={{opacity:0}} animate={{opacity:1}}
+                    style={{display:'flex',alignItems:'center',gap:5}}><Copy size={12}/>Copy</motion.span>
               }
             </AnimatePresence>
           </motion.button>
 
           <motion.button className="rc-btn-export" onClick={exportPDF} disabled={exporting} whileTap={{ scale: .97 }}>
-            <Download size={12} /> {exporting ? 'Opening…' : 'Export PDF'}
+            <Download size={12}/> {exporting ? 'Opening…' : 'Export PDF'}
           </motion.button>
         </div>
-
       </div>
     </>
   )
