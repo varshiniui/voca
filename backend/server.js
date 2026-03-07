@@ -67,121 +67,157 @@ const storage = multer.diskStorage({
 const upload = multer({ storage, limits: { fileSize: 25 * 1024 * 1024 } });
 
 /* ══════════════════════════════════════
-   SUMMARIZE — Groq first, Gemini fallback
+   SUMMARIZE
 ══════════════════════════════════════ */
 
-const SUMMARY_PROMPT = (text) => `Analyze this voice note and return ONLY valid JSON, no markdown, no explanation.
+const PROMPT = (text) =>
+`You are a note summarizer. Return ONLY valid JSON, no markdown, no extra text.
 
-Transcription: "${text}"
+Voice note: "${text}"
 
-Return exactly this structure:
+JSON format:
 {
   "summary": "2-3 sentence summary",
-  "keyPoints": ["point 1", "point 2", "point 3"],
-  "actionItems": ["action 1", "action 2"],
-  "mood": "one word e.g. Focused, Casual, Excited, Reflective",
+  "keyPoints": ["point 1","point 2","point 3"],
+  "actionItems": ["action 1","action 2"],
+  "mood": "one word e.g. Focused",
   "wordCount": ${text.split(/\s+/).length}
 }`;
 
 function parseJSON(raw) {
-  const clean = raw.trim()
-    .replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
+  const clean = (raw||'').trim()
+    .replace(/^```json\s*/i,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
   try { return JSON.parse(clean); } catch { return null; }
 }
 
-// PRIMARY: Groq llama3 — fast, generous free tier
-async function summarizeWithGroq(transcription) {
-  const resp = await groq.chat.completions.create({
-    model: "llama3-8b-8192",
-    messages: [
-      { role: "system", content: "You are a note-taking assistant. Always respond with valid JSON only. No markdown, no explanation." },
-      { role: "user",   content: SUMMARY_PROMPT(transcription) }
-    ],
-    temperature: 0.3,
-    max_tokens: 600,
-  });
+const isQuota = err =>
+  (err?.message||'').includes('429') ||
+  (err?.message||'').includes('quota') ||
+  (err?.message||'').includes('rate_limit') ||
+  (err?.message||'').includes('RESOURCE_EXHAUSTED') ||
+  (err?.status === 429);
 
-  const parsed = parseJSON(resp.choices[0].message.content);
-  if (!parsed) throw new Error("Groq returned invalid JSON");
-  parsed.wordCount = parsed.wordCount || transcription.split(/\s+/).length;
-  return parsed;
+// Try multiple Groq models — each has independent rate limits
+const GROQ_MODELS = [
+  'gemma2-9b-it',         // Google Gemma — often has free quota
+  'llama-3.1-8b-instant', // Fast, high RPM
+  'llama3-8b-8192',       // Standard
+  'mixtral-8x7b-32768',   // Fallback
+];
+
+async function summarizeGroq(transcription) {
+  for (const model of GROQ_MODELS) {
+    try {
+      console.log(`Trying Groq model: ${model}`);
+      const resp = await groq.chat.completions.create({
+        model,
+        messages: [
+          { role: 'system', content: 'Return ONLY valid JSON. No markdown. No explanation.' },
+          { role: 'user',   content: PROMPT(transcription) }
+        ],
+        temperature: 0.2,
+        max_tokens: 500,
+      });
+      const parsed = parseJSON(resp.choices[0].message.content);
+      if (parsed) {
+        parsed.wordCount = parsed.wordCount || transcription.split(/\s+/).length;
+        console.log(`Success with model: ${model}`);
+        return parsed;
+      }
+    } catch (err) {
+      if (isQuota(err)) {
+        console.warn(`${model} quota hit, trying next...`);
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw Object.assign(new Error('all_groq_quota'), { allQuota: true });
 }
 
-// FALLBACK: Gemini
-async function summarizeWithGemini(transcription) {
+async function summarizeGemini(transcription) {
   const resp = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
-    contents: SUMMARY_PROMPT(transcription)
+    model: 'gemini-2.0-flash',
+    contents: PROMPT(transcription)
   });
   const parsed = parseJSON(resp.text);
-  if (!parsed) throw new Error("Gemini returned invalid JSON");
+  if (!parsed) throw new Error('Gemini returned invalid JSON');
   parsed.wordCount = parsed.wordCount || transcription.split(/\s+/).length;
   return parsed;
 }
 
-// Try Groq → fallback to Gemini
+// Build a basic summary without any AI if everything is quota-limited
+function fallbackSummary(transcription) {
+  const words = transcription.trim().split(/\s+/);
+  const sentences = transcription.split(/[.!?]+/).filter(s => s.trim().length > 10);
+  return {
+    summary:     sentences.slice(0,2).join('. ').trim() + '.' || transcription.slice(0,200),
+    keyPoints:   sentences.slice(0,3).map(s => s.trim()).filter(Boolean),
+    actionItems: [],
+    mood:        'Casual',
+    wordCount:   words.length,
+    _fallback:   true,
+  };
+}
+
 async function summarize(transcription) {
+  // 1. Try all Groq models
   try {
-    console.log("Summarizing with Groq...");
-    return await summarizeWithGroq(transcription);
+    return await summarizeGroq(transcription);
   } catch (err) {
-    console.warn("Groq summarize failed, trying Gemini:", err.message);
-    try {
-      return await summarizeWithGemini(transcription);
-    } catch (err2) {
-      const isQuota = err2?.message?.includes('429') ||
-                      err2?.message?.includes('quota') ||
-                      err2?.message?.includes('RESOURCE_EXHAUSTED');
-      const e = new Error(isQuota
-        ? 'AI quota reached — try again in 30s.'
-        : `Summarization failed: ${err2.message}`);
-      e.statusCode = isQuota ? 429 : 500;
-      throw e;
+    if (!err.allQuota) throw err;
+    console.warn('All Groq models quota-limited, trying Gemini...');
+  }
+
+  // 2. Try Gemini
+  try {
+    return await summarizeGemini(transcription);
+  } catch (err) {
+    if (isQuota(err)) {
+      console.warn('Gemini also quota-limited, using fallback summary');
+      // 3. Basic fallback — always works, no AI needed
+      return fallbackSummary(transcription);
     }
+    throw err;
   }
 }
 
 /* ══════════════════════════════════════
-   TRANSCRIBE — Groq Whisper first, AssemblyAI fallback
+   TRANSCRIBE
 ══════════════════════════════════════ */
 
 async function transcribeAudio(filePath, language) {
   try {
-    const opts = { file: fs.createReadStream(filePath), model: "whisper-large-v3" };
+    const opts = { file: fs.createReadStream(filePath), model: 'whisper-large-v3' };
     if (language) opts.language = language;
-    const r = await groq.audio.transcriptions.create(opts);
-    return r.text;
+    return (await groq.audio.transcriptions.create(opts)).text;
   } catch (err) {
-    console.warn("Groq transcription failed, trying AssemblyAI:", err.message);
+    console.warn('Groq transcription failed, trying AssemblyAI:', err.message);
   }
   const opts = { audio: filePath };
   if (language) opts.language_code = language;
-  const r = await assembly.transcripts.transcribe(opts);
-  return r.text;
+  return (await assembly.transcripts.transcribe(opts)).text;
 }
 
 /* ══════════════════════════════════════
    ROUTES
 ══════════════════════════════════════ */
 
-// Audio → text only
-app.post("/api/transcribe", upload.single("audio"), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No audio file" });
+app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No audio file' });
   try {
     const transcription = await transcribeAudio(req.file.path, req.body.language || null);
     res.json({ success: true, transcription });
   } catch (err) {
-    console.error("Transcribe error:", err);
-    res.status(500).json({ error: "Transcription failed", details: err.message });
+    res.status(500).json({ error: 'Transcription failed', details: err.message });
   } finally { fs.unlink(req.file.path, () => {}); }
 });
 
-// Audio → transcribe + summarize + save
-app.post("/api/summarize", upload.single("audio"), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No audio file" });
+app.post('/api/summarize', upload.single('audio'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No audio file' });
   try {
     const transcription = await transcribeAudio(req.file.path, req.body.language || null);
-    if (!transcription?.trim()) return res.status(400).json({ error: "No speech detected." });
+    if (!transcription?.trim()) return res.status(400).json({ error: 'No speech detected.' });
 
     const summary = await summarize(transcription);
     const db = await pool.query(
@@ -192,17 +228,16 @@ app.post("/api/summarize", upload.single("audio"), async (req, res) => {
        JSON.stringify(summary.actionItems || []),
        summary.mood, summary.wordCount, req.body.language || 'en']
     );
-    res.json({ success: true, id: db.rows[0].id, timestamp: db.rows[0].createdAt, transcription, ...summary });
+    res.json({ success:true, id:db.rows[0].id, timestamp:db.rows[0].createdAt, transcription, ...summary });
   } catch (err) {
-    console.error("Summarize error:", err);
-    res.status(err.statusCode || 500).json({ error: err.message });
+    console.error('Summarize error:', err);
+    res.status(500).json({ error: err.message });
   } finally { fs.unlink(req.file.path, () => {}); }
 });
 
-// Text → summarize + save  (used after "review transcript" edit)
-app.post("/api/summarize-text", async (req, res) => {
+app.post('/api/summarize-text', async (req, res) => {
   const { transcription, language } = req.body;
-  if (!transcription?.trim()) return res.status(400).json({ error: "No transcription provided" });
+  if (!transcription?.trim()) return res.status(400).json({ error: 'No transcription provided' });
   try {
     const summary = await summarize(transcription);
     const db = await pool.query(
@@ -213,21 +248,20 @@ app.post("/api/summarize-text", async (req, res) => {
        JSON.stringify(summary.actionItems || []),
        summary.mood, summary.wordCount, language || 'en']
     );
-    res.json({ success: true, id: db.rows[0].id, timestamp: db.rows[0].createdAt, transcription, ...summary });
+    res.json({ success:true, id:db.rows[0].id, timestamp:db.rows[0].createdAt, transcription, ...summary });
   } catch (err) {
-    console.error("Summarize-text error:", err);
-    res.status(err.statusCode || 500).json({ error: err.message });
+    console.error('Summarize-text error:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Get notes
-app.get("/api/notes", async (req, res) => {
+app.get('/api/notes', async (req, res) => {
   try {
     const r = await pool.query(
       `SELECT id,transcription,summary,"keyPoints","actionItems",mood,"wordCount",language,"createdAt"
        FROM notes ORDER BY "createdAt" DESC LIMIT 50`
     );
-    res.json({ success: true, notes: r.rows.map(n => ({
+    res.json({ success:true, notes: r.rows.map(n => ({
       ...n,
       keyPoints:   JSON.parse(n.keyPoints   || '[]'),
       actionItems: JSON.parse(n.actionItems || '[]'),
@@ -235,26 +269,26 @@ app.get("/api/notes", async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete("/api/notes/:id", async (req, res) => {
-  try { await pool.query(`DELETE FROM notes WHERE id=$1`, [req.params.id]); res.json({ success: true }); }
-  catch (err) { res.status(500).json({ error: err.message }); }
+app.delete('/api/notes/:id', async (req,res) => {
+  try { await pool.query(`DELETE FROM notes WHERE id=$1`,[req.params.id]); res.json({success:true}); }
+  catch (err) { res.status(500).json({error:err.message}); }
 });
 
-app.delete("/api/notes", async (req, res) => {
-  try { await pool.query(`DELETE FROM notes`); res.json({ success: true }); }
-  catch (err) { res.status(500).json({ error: err.message }); }
+app.delete('/api/notes', async (req,res) => {
+  try { await pool.query(`DELETE FROM notes`); res.json({success:true}); }
+  catch (err) { res.status(500).json({error:err.message}); }
 });
 
-app.get("/health", async (req, res) => {
+app.get('/health', async (req,res) => {
   try {
     const r = await pool.query(`SELECT COUNT(*) FROM notes`);
-    res.json({ status: "Voca alive", notes: parseInt(r.rows[0].count) });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+    res.json({ status:'Voca alive', notes:parseInt(r.rows[0].count) });
+  } catch (err) { res.status(500).json({error:err.message}); }
 });
 
-app.get("/", (req, res) => res.send("Voca Backend running 🚀"));
+app.get('/', (req,res) => res.send('Voca Backend running 🚀'));
 
 process.on('unhandledRejection', err => console.error('Unhandled:', err));
 process.on('uncaughtException',  err => console.error('Uncaught:',  err));
 
-app.listen(PORT, "0.0.0.0", () => console.log(`Voca server on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Voca server on port ${PORT}`));
