@@ -46,12 +46,12 @@ async function initDB() {
         id            SERIAL PRIMARY KEY,
         transcription TEXT NOT NULL,
         summary       TEXT,
-        "keyPoints"   TEXT,
-        "actionItems" TEXT,
+        keypoints     TEXT,
+        actionitems   TEXT,
         mood          TEXT,
-        "wordCount"   INTEGER,
+        wordcount     INTEGER,
         language      TEXT DEFAULT 'en',
-        "createdAt"   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        createdat     TIMESTAMP DEFAULT NOW()
       )
     `);
     console.log("Database ready");
@@ -225,14 +225,14 @@ app.post('/api/summarize', upload.single('audio'), async (req, res) => {
 
     const summary = await summarize(transcription);
     const db = await pool.query(
-      `INSERT INTO notes (transcription,summary,"keyPoints","actionItems",mood,"wordCount",language)
-       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id,"createdAt"`,
+      `INSERT INTO notes (transcription,summary,keypoints,actionitems,mood,wordcount,language)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id,createdat`,
       [transcription, summary.summary,
        JSON.stringify(summary.keyPoints   || []),
        JSON.stringify(summary.actionItems || []),
        summary.mood, summary.wordCount, req.body.language || 'en']
     );
-    res.json({ success:true, id:db.rows[0].id, timestamp:db.rows[0].createdAt, transcription, ...summary });
+    res.json({ success:true, id:db.rows[0].id, timestamp:db.rows[0].createdat, transcription, ...summary });
   } catch (err) {
     console.error('Summarize error:', err);
     res.status(500).json({ error: err.message });
@@ -245,14 +245,14 @@ app.post('/api/summarize-text', async (req, res) => {
   try {
     const summary = await summarize(transcription);
     const db = await pool.query(
-      `INSERT INTO notes (transcription,summary,"keyPoints","actionItems",mood,"wordCount",language)
-       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id,"createdAt"`,
+      `INSERT INTO notes (transcription,summary,keypoints,actionitems,mood,wordcount,language)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id,createdat`,
       [transcription, summary.summary,
        JSON.stringify(summary.keyPoints   || []),
        JSON.stringify(summary.actionItems || []),
        summary.mood, summary.wordCount, language || 'en']
     );
-    res.json({ success:true, id:db.rows[0].id, timestamp:db.rows[0].createdAt, transcription, ...summary });
+    res.json({ success:true, id:db.rows[0].id, timestamp:db.rows[0].createdat, transcription, ...summary });
   } catch (err) {
     console.error('Summarize-text error:', err);
     res.status(500).json({ error: err.message });
@@ -262,13 +262,15 @@ app.post('/api/summarize-text', async (req, res) => {
 app.get('/api/notes', async (req, res) => {
   try {
     const r = await pool.query(
-      `SELECT id,transcription,summary,"keyPoints","actionItems",mood,"wordCount",language,"createdAt"
-       FROM notes ORDER BY "createdAt" DESC LIMIT 50`
+      `SELECT id,transcription,summary,keypoints,actionitems,mood,wordcount,language,createdat
+       FROM notes ORDER BY createdat DESC LIMIT 50`
     );
     res.json({ success:true, notes: r.rows.map(n => ({
       ...n,
-      keyPoints:   JSON.parse(n.keyPoints   || '[]'),
-      actionItems: JSON.parse(n.actionItems || '[]'),
+      keyPoints:   JSON.parse(n.keypoints   || '[]'),
+      actionItems: JSON.parse(n.actionitems || '[]'),
+      wordCount:   n.wordcount,
+      createdAt:   n.createdat,
     }))});
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
