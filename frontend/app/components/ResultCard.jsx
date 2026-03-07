@@ -49,26 +49,47 @@ const RC_CSS = `
     width:3px;height:12px;border-radius:2px;flex-shrink:0;
   }
 
-  /* summary box — sticky note style */
+  /* summary — full sticky note */
+  @keyframes rc-note-in { 0%{opacity:0;transform:rotate(-4deg) scale(.9) translateY(20px);} 70%{transform:rotate(-1.2deg) scale(1.01);} 100%{opacity:1;transform:rotate(-1deg) scale(1);} }
+
+  .rc-summary-wrap {
+    position:relative;
+    animation:rc-note-in .65s cubic-bezier(.34,1.56,.64,1) forwards;
+    margin-bottom:2px;
+  }
+  .rc-tape {
+    position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+    width:52px;height:18px;border-radius:4px;z-index:1;
+    background:rgba(120,180,160,.42);
+    border:1px solid rgba(140,195,175,.5);
+    box-shadow:0 2px 6px rgba(80,140,120,.18);
+  }
   .rc-summary {
-    padding:16px 18px;border-radius:18px;
+    position:relative;
+    padding:24px 20px 18px;border-radius:18px;
     background:linear-gradient(158deg,#e8f4f0 0%,#d8eee8 50%,#c8e4dc 100%);
     border:1px solid rgba(140,190,175,.35);
     font-family:'Cormorant Garamond',serif;
     font-size:14.5px;font-style:italic;font-weight:400;
-    line-height:1.85;color:#3a3010;
+    line-height:1.85;color:#1a3830;
+    transform:rotate(-1deg);
+    transform-origin:center top;
     box-shadow:
-      0 4px 0 rgba(120,180,160,.2),
-      0 5px 0 rgba(100,165,145,.12),
-      0 8px 20px rgba(80,140,120,.12);
+      4px 7px 36px rgba(80,140,120,.14),
+      1px 2px 4px rgba(0,0,0,.04),
+      0 6px 0 rgba(120,180,160,.2),
+      0 7px 0 rgba(100,165,145,.12),
+      0 8px 10px rgba(80,140,120,.12);
     transition:transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease;
     cursor:default;
   }
   .rc-summary:hover {
-    transform:translateY(-3px) rotate(.3deg);
+    transform:rotate(0deg) translateY(-4px) scale(1.01);
     box-shadow:
-      0 7px 0 rgba(200,180,60,.14),
-      0 14px 30px rgba(160,130,40,.18);
+      6px 14px 48px rgba(80,140,120,.2),
+      1px 2px 4px rgba(0,0,0,.04),
+      0 8px 0 rgba(120,180,160,.16),
+      0 9px 14px rgba(80,140,120,.14);
   }
 
   /* key point row */
@@ -191,7 +212,14 @@ export default function ResultCard({ results }) {
 
   if (!results) return null
 
-  const { transcription, keyPoints, actionItems, summary, mood, wordCount, timestamp } = results
+  const {
+    transcription,
+    keyPoints:   _kp,
+    actionItems: _ai,
+    summary, mood, wordCount, timestamp,
+  } = results
+  const keyPoints   = Array.isArray(_kp) ? _kp : []
+  const actionItems = (Array.isArray(_ai) ? _ai : []).filter(a => !a.toLowerCase().includes('no specific'))
   const cfg  = moodCfg[mood] || moodCfg.default
   const time = timestamp ? new Date(timestamp).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }) : ''
   const date = timestamp ? new Date(timestamp).toLocaleDateString([], { month:'short', day:'numeric', year:'numeric' }) : ''
@@ -272,40 +300,51 @@ body{font-family:'Outfit',sans-serif;font-weight:300;background:#f0ebe4;color:#1
       <style>{RC_CSS}</style>
       <div className="rc-wrap">
 
-        {/* mood + meta */}
-        <motion.div
-          initial={{ opacity:0, y:8, scale:.95 }}
-          animate={{ opacity:1, y:0, scale:1  }}
-          transition={{ ...sp, delay:.04 }}
-          style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18 }}
-        >
-          <motion.span className="rc-mood"
-            style={{ background:cfg.bg, color:cfg.color, border:`1px solid ${cfg.color}22` }}
-            animate={{ rotate:[0,1,-1,0] }}
-            transition={{ duration:3, repeat:Infinity, repeatDelay:4 }}>
-            {cfg.label}
-          </motion.span>
-          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-            {wordCount && (
-              <span style={{ fontSize:10.5, color:'#9a8878', fontFamily:"'Outfit',sans-serif",
-                padding:'3px 9px', borderRadius:99,
-                background:'rgba(200,180,160,.12)', border:'1px solid rgba(200,180,160,.2)' }}>
-                {wordCount} words
-              </span>
-            )}
-            {time && (
-              <span style={{ fontSize:10.5, color:'#9a8878', fontFamily:"'Outfit',sans-serif" }}>{time}</span>
-            )}
-          </div>
-        </motion.div>
+        {/* timestamp */}
+        {time && (
+          <motion.div
+            initial={{ opacity:0 }} animate={{ opacity:1 }}
+            transition={{ delay:.04 }}
+            style={{ display:'flex', justifyContent:'flex-end', marginBottom:4 }}>
+            <span style={{ fontSize:10, color:'#9a8878', fontFamily:"'Outfit',sans-serif" }}>{time}</span>
+          </motion.div>
+        )}
 
-        {/* summary */}
+        {/* summary sticky note */}
         <motion.div
-          initial={{ opacity:0, y:10, rotate:-1 }}
-          animate={{ opacity:1, y:0,  rotate:0  }}
+          initial={{ opacity:0, y:16 }}
+          animate={{ opacity:1, y:0   }}
           transition={{ ...sp, delay:.08 }}>
-          <Label color={cfg.color}>Summary</Label>
-          <div className="rc-summary">{summary}</div>
+          <div className="rc-summary-wrap">
+            <div className="rc-tape"/>
+            <div className="rc-summary">
+              {mood && (
+                <motion.div
+                  initial={{ opacity:0, scale:.6 }} animate={{ opacity:1, scale:1 }}
+                  transition={{ delay:.3, type:'spring', stiffness:300 }}
+                  style={{
+                    display:'inline-flex', alignItems:'center', gap:5,
+                    padding:'3px 10px', borderRadius:99, marginBottom:11,
+                    background:cfg.bg, border:`1px solid ${cfg.color}22`,
+                    fontSize:10.5, fontWeight:500, color:cfg.color,
+                    fontFamily:"'Outfit',sans-serif",
+                  }}>
+                  <motion.span
+                    animate={{ rotate:[0,10,-10,0] }}
+                    transition={{ duration:2, repeat:Infinity, repeatDelay:3 }}
+                    style={{ fontSize:13 }}>{cfg.label.split(' ').pop()}</motion.span>
+                  {mood}
+                </motion.div>
+              )}
+              <p style={{ margin:0 }}>{summary}</p>
+              {wordCount && (
+                <p style={{ fontSize:9.5, color:'#5a9080', marginTop:10, opacity:.7,
+                  fontFamily:"'Outfit',sans-serif", fontStyle:'normal' }}>
+                  {wordCount} words
+                </p>
+              )}
+            </div>
+          </div>
         </motion.div>
 
         <Divider/>

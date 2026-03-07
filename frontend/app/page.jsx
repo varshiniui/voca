@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Recorder from './components/Recorder'
+import ResultCard from './components/ResultCard'
 import HistoryPanel from './components/HistoryPanel'
 
 const MOOD = {
@@ -408,188 +409,6 @@ function FloatingDots() {
   )
 }
 
-function ResultCanvas({ data }) {
-  const kp = Array.isArray(data.keyPoints)   ? data.keyPoints   : []
-  const ai = Array.isArray(data.actionItems)
-    ? data.actionItems.filter(a => !a.toLowerCase().includes('no specific')) : []
-  const m  = getMood(data.mood)
-
-  return (
-    <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-
-      {/* sticky note */}
-      <motion.div
-        className="sticky-note"
-        initial={{ opacity:0, rotate:-6, y:30, scale:.92 }}
-        animate={{ opacity:1, rotate:-1,  y:0,  scale:1  }}
-        transition={{ duration:.7, type:'spring', stiffness:110, damping:14 }}
-      >
-        <div className="sticky-tape"/>
-        {data.mood && (
-          <motion.div
-            initial={{ opacity:0, scale:.6, y:-8 }}
-            animate={{ opacity:1, scale:1,  y:0  }}
-            transition={{ delay:.3, type:'spring', stiffness:300 }}
-            style={{
-              display:'inline-flex', alignItems:'center', gap:5,
-              padding:'4px 10px', borderRadius:99, marginBottom:13,
-              background:m.bg, border:`1px solid ${m.fg}28`,
-              fontSize:10.5, fontWeight:500, color:m.fg,
-              fontFamily:"'Outfit',sans-serif", letterSpacing:'.03em',
-              boxShadow:`0 2px 8px ${m.bg}`,
-            }}>
-            <motion.span
-              animate={{ rotate:[0,10,-10,0] }}
-              transition={{ duration:2, repeat:Infinity, repeatDelay:3 }}
-              style={{ fontSize:13 }}>{m.emoji}
-            </motion.span>
-            {data.mood}
-          </motion.div>
-        )}
-        <p style={{
-          fontFamily:"'Cormorant Garamond',serif",
-          fontSize:'clamp(15px,4vw,17px)',
-          lineHeight:1.8, color:'#1a3830',
-          fontStyle:'italic', fontWeight:400,
-          paddingRight:data.mood?76:10, marginTop:4,
-        }}>{data.summary}</p>
-        {data.wordCount && (
-          <p style={{ fontSize:9.5, color:'#5a9080', marginTop:10, opacity:.7,
-            fontFamily:"'Outfit',sans-serif" }}>
-            {data.wordCount} words
-          </p>
-        )}
-      </motion.div>
-
-      {/* key chips */}
-      {kp.length > 0 && (
-        <div>
-          <motion.p
-            initial={{ opacity:0, x:-8 }} animate={{ opacity:1, x:0 }}
-            transition={{ delay:.18 }}
-            style={{ fontSize:9, fontWeight:500, color:'#9a8878', letterSpacing:'.16em',
-              textTransform:'uppercase', marginBottom:8, fontFamily:"'Outfit',sans-serif",
-              display:'flex', alignItems:'center', gap:6 }}>
-            <span style={{ display:'inline-block', width:3, height:10, borderRadius:2,
-              background:'#b09098', flexShrink:0 }}/>
-            Key points
-          </motion.p>
-          <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-            {kp.map((pt,i) => (
-              <motion.div key={i} className="kchip"
-                initial={{ opacity:0, scale:.6, y:12 }}
-                animate={{ opacity:1, scale:1,  y:0  }}
-                transition={{ delay:.22+i*.08, type:'spring', stiffness:300, damping:18 }}
-              >
-                <motion.span
-                  animate={{ rotate:[0,360] }}
-                  transition={{ duration:8, repeat:Infinity, ease:'linear' }}
-                  style={{ color:'#b09098', fontSize:8, marginTop:3, flexShrink:0, display:'block' }}>◆</motion.span>
-                {pt}
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* action items */}
-      {ai.length > 0 && (
-        <div>
-          <motion.p
-            initial={{ opacity:0, x:-8 }} animate={{ opacity:1, x:0 }}
-            transition={{ delay:.4 }}
-            style={{ fontSize:9, fontWeight:500, color:'#9a8878', letterSpacing:'.16em',
-              textTransform:'uppercase', marginBottom:8, fontFamily:"'Outfit',sans-serif",
-              display:'flex', alignItems:'center', gap:6 }}>
-            <span style={{ display:'inline-block', width:3, height:10, borderRadius:2,
-              background:'#8aaa90', flexShrink:0 }}/>
-            Actions
-          </motion.p>
-          <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-            {ai.map((a,i) => (
-              <motion.div key={i} className="aitem"
-                initial={{ opacity:0, x:-20, scale:.95 }}
-                animate={{ opacity:1, x:0,   scale:1   }}
-                transition={{ delay:.45+i*.09, type:'spring', stiffness:240, damping:22 }}
-              >
-                <motion.div
-                  initial={{ scale:0, rotate:-30 }}
-                  animate={{ scale:1, rotate:0   }}
-                  transition={{ delay:.55+i*.09, type:'spring', stiffness:400, damping:16 }}
-                  whileHover={{ rotate:15, scale:1.2 }}
-                  style={{
-                    width:18, height:18, borderRadius:6, flexShrink:0, marginTop:1,
-                    background:'linear-gradient(135deg,#8aaa90,#6a9870)',
-                    display:'flex', alignItems:'center', justifyContent:'center',
-                    boxShadow:'0 3px 8px rgba(100,140,120,.3)',
-                    cursor:'default',
-                  }}>
-                  <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                    <path d="M1 4.5L3.5 7L8 2" stroke="white" strokeWidth="1.8"
-                      strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </motion.div>
-                <span style={{ fontSize:12, color:'#4a3c34', lineHeight:1.55,
-                  fontFamily:"'Outfit',sans-serif", fontWeight:300 }}>{a}</span>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-const DEMO_NOTES = [
-  {
-    // Use case 1: Student after a lecture
-    summary: "Attended the machine learning lecture on neural networks today. The professor covered backpropagation in depth and introduced convolutional layers. Need to revise the gradient descent notes before the exam next Thursday and finish the assignment on linear regression.",
-    keyPoints: [
-      "Backpropagation and gradient descent covered in depth",
-      "CNNs introduced — convolution, pooling, activation functions",
-      "Exam is next Thursday — neural networks is the main topic",
-    ],
-    actionItems: [
-      "Revise gradient descent notes by Wednesday",
-      "Complete linear regression assignment",
-      "Watch 3Blue1Brown CNN explainer video",
-      "Form study group with Priya and Arjun",
-    ],
-    mood: "Focused", wordCount: 54,
-  },
-  {
-    // Use case 2: Developer during a project planning session
-    summary: "Planning session for the Voca mobile app. Decided to go with React Native over Flutter for faster iteration since the team already knows JavaScript. The core screens are the recorder, summary view, and history. Target is a working prototype in two weeks for the internship demo.",
-    keyPoints: [
-      "React Native chosen over Flutter — JS familiarity wins",
-      "Three core screens: Recorder, Summary, History",
-      "Two-week timeline targeting internship demo day",
-    ],
-    actionItems: [
-      "Set up React Native project with Expo",
-      "Wire up existing backend API to mobile",
-      "Design low-fi mockups for all three screens",
-      "Test audio recording on both iOS and Android",
-    ],
-    mood: "Professional", wordCount: 61,
-  },
-  {
-    // Use case 3: Personal errands and life admin
-    summary: "Lots to sort out this weekend. Need to renew the driving licence before it expires on the 15th, pick up the prescription from the pharmacy, and call the landlord about the leaking tap. Also want to find time to catch up with Meera — haven't spoken in weeks.",
-    keyPoints: [
-      "Driving licence expires on the 15th — urgent",
-      "Prescription ready at pharmacy for pickup",
-      "Landlord needs to be contacted about the tap",
-    ],
-    actionItems: [
-      "Book driving licence renewal appointment online",
-      "Pick up prescription from pharmacy before 6pm",
-      "Call landlord and report the leaking tap",
-      "Text Meera and plan a catch-up call",
-    ],
-    mood: "Casual", wordCount: 58,
-  },
-]
 
 export default function Home() {
   const [results,  setResults]  = useState(null)
@@ -762,7 +581,7 @@ export default function Home() {
                   </div>
                   <button className="vresult-link" onClick={()=>setHistOpen(true)}>all notes →</button>
                 </div>
-                <ResultCanvas data={results}/>
+                <ResultCard results={results}/>
               </motion.div>
             )}
           </AnimatePresence>
