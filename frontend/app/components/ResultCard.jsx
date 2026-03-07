@@ -52,15 +52,15 @@ const RC_CSS = `
   /* summary box — sticky note style */
   .rc-summary {
     padding:16px 18px;border-radius:18px;
-    background:linear-gradient(158deg,#fdf8f5 0%,#f5ede8 55%,#ede0d8 100%);
-    border:1px solid rgba(220,195,185,.45);
+    background:linear-gradient(158deg,#e8f4f0 0%,#d8eee8 50%,#c8e4dc 100%);
+    border:1px solid rgba(140,190,175,.35);
     font-family:'Cormorant Garamond',serif;
     font-size:14.5px;font-style:italic;font-weight:400;
     line-height:1.85;color:#3a3010;
     box-shadow:
-      0 4px 0 rgba(200,165,150,.2),
-      0 5px 0 rgba(190,155,140,.12),
-      0 8px 20px rgba(160,110,90,.1);
+      0 4px 0 rgba(120,180,160,.2),
+      0 5px 0 rgba(100,165,145,.12),
+      0 8px 20px rgba(80,140,120,.12);
     transition:transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease;
     cursor:default;
   }
@@ -222,7 +222,7 @@ body{font-family:'Outfit',sans-serif;font-weight:300;background:#f0ebe4;color:#1
 .mood{display:inline-block;padding:5px 14px;border-radius:99px;font-size:10.5px;font-weight:500;letter-spacing:.04em;margin-bottom:22px}
 .label{font-size:9px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:#9a8878;margin-bottom:9px;display:flex;align-items:center;gap:6px}
 .label-bar{width:3px;height:10px;border-radius:2px;display:inline-block}
-.summary{font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;line-height:1.85;color:#3a3010;margin-bottom:26px;padding:16px 18px;background:linear-gradient(158deg,#fdf8f5,#ede0d8);border-radius:14px;border:1px solid rgba(220,195,185,.4)}
+.summary{font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;line-height:1.85;color:#3a3010;margin-bottom:26px;padding:16px 18px;background:linear-gradient(158deg,#e8f4f0,#c8e4dc);border-radius:14px;border:1px solid rgba(140,190,175,.35)}
 .kp-row{display:flex;gap:10px;margin-bottom:8px;align-items:flex-start}
 .kp-num{width:20px;height:20px;border-radius:5px;background:rgba(176,144,154,.18);color:#806070;font-size:9px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
 .kp-text{font-size:13px;color:#4a3c34;line-height:1.7}

@@ -279,16 +279,16 @@ const PAGE_CSS = `
   /* sticky note */
   .sticky-note {
     position:relative;
-    background:linear-gradient(158deg,#fdf8f5 0%,#f5ede8 55%,#ede0d8 100%);
+    background:linear-gradient(158deg,#e8f4f0 0%,#d8eee8 50%,#c8e4dc 100%);
     border-radius:20px;
     padding:28px 24px 22px;
-    border:1px solid rgba(220,195,185,.45);
+    border:1px solid rgba(140,190,175,.35);
     box-shadow:
-      4px 7px 36px rgba(160,110,90,.12),
+      4px 7px 36px rgba(80,140,120,.16),
       1px 2px 4px rgba(0,0,0,.04),
-      0 6px 0 rgba(200,165,150,.22),
-      0 7px 0 rgba(190,155,140,.14),
-      0 8px 10px rgba(160,110,90,.12);
+      0 6px 0 rgba(120,180,160,.2),
+      0 7px 0 rgba(100,165,145,.12),
+      0 8px 10px rgba(80,140,120,.14);
     transform:rotate(-1deg);
     transform-origin:center top;
     transition:transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease;
@@ -296,17 +296,17 @@ const PAGE_CSS = `
   .sticky-note:hover {
     transform:rotate(0deg) translateY(-4px) scale(1.01);
     box-shadow:
-      6px 14px 48px rgba(160,110,90,.18),
+      6px 14px 48px rgba(80,140,120,.22),
       1px 2px 4px rgba(0,0,0,.04),
-      0 8px 0 rgba(200,165,150,.18),
-      0 9px 14px rgba(160,110,90,.14);
+      0 8px 0 rgba(120,180,160,.16),
+      0 9px 14px rgba(80,140,120,.16);
   }
   .sticky-tape {
     position:absolute;top:-9px;left:50%;transform:translateX(-50%);
     width:52px;height:18px;border-radius:4px;
-    background:rgba(200,160,144,.32);backdrop-filter:blur(2px);
-    border:1px solid rgba(210,175,160,.35);
-    box-shadow:0 2px 6px rgba(180,130,110,.15);
+    background:rgba(120,180,160,.45);backdrop-filter:blur(2px);
+    border:1px solid rgba(140,195,175,.5);
+    box-shadow:0 2px 6px rgba(80,140,120,.2);
   }
 
   /* key chips */
@@ -449,12 +449,12 @@ function ResultCanvas({ data }) {
         <p style={{
           fontFamily:"'Cormorant Garamond',serif",
           fontSize:'clamp(15px,4vw,17px)',
-          lineHeight:1.8, color:'#2e1e16',
+          lineHeight:1.8, color:'#1a3830',
           fontStyle:'italic', fontWeight:400,
           paddingRight:data.mood?76:10, marginTop:4,
         }}>{data.summary}</p>
         {data.wordCount && (
-          <p style={{ fontSize:9.5, color:'#b09080', marginTop:10, opacity:.7,
+          <p style={{ fontSize:9.5, color:'#5a9080', marginTop:10, opacity:.7,
             fontFamily:"'Outfit',sans-serif" }}>
             {data.wordCount} words
           </p>
