@@ -341,6 +341,38 @@ const PAGE_CSS = `
     box-shadow:0 5px 0 rgba(138,170,144,.16), 0 10px 22px rgba(100,140,120,.12);
   }
 
+  /* demo button */
+  .vdemo-btn {
+    display:inline-flex;align-items:center;gap:7px;
+    padding:9px 20px;border-radius:99px;border:none;cursor:pointer;
+    background:rgba(255,252,248,.85);
+    border:1.5px dashed rgba(200,144,124,.45);
+    font-family:'Outfit',sans-serif;font-size:12px;font-weight:400;
+    color:#c8907c;letter-spacing:.02em;
+    box-shadow:0 3px 0 rgba(200,144,124,.15), 0 6px 20px rgba(200,144,124,.1);
+    transition:all .28s cubic-bezier(.34,1.56,.64,1);
+    backdrop-filter:blur(10px);
+  }
+  .vdemo-btn:hover {
+    background:rgba(255,252,248,.98);
+    border-style:solid;border-color:#c8907c;
+    color:#a06050;
+    transform:translateY(-4px) scale(1.04);
+    box-shadow:0 7px 0 rgba(200,144,124,.12), 0 14px 30px rgba(200,144,124,.2);
+  }
+  .vdemo-btn:active { transform:translateY(0) scale(.98); }
+  .vdemo-btn:disabled { opacity:.5; cursor:default; transform:none; }
+
+  /* demo badge on result */
+  .vdemo-badge {
+    display:inline-flex;align-items:center;gap:5px;
+    padding:3px 9px;border-radius:99px;
+    background:rgba(200,160,96,.12);
+    border:1px solid rgba(200,160,96,.3);
+    font-size:9.5px;color:#907040;font-weight:400;
+    font-family:'Outfit',sans-serif;letter-spacing:.05em;
+  }
+
   .vfoot {
     text-align:center;font-size:11px;color:#c8bab0;
     font-style:italic;font-family:'Outfit',sans-serif;
@@ -430,58 +462,103 @@ function ResultCanvas({ data }) {
 
       {/* key chips */}
       {kp.length > 0 && (
-        <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-          {kp.map((pt,i) => (
-            <motion.div key={i} className="kchip"
-              initial={{ opacity:0, scale:.6, y:12 }}
-              animate={{ opacity:1, scale:1,  y:0  }}
-              transition={{ delay:.22+i*.08, type:'spring', stiffness:300, damping:18 }}
-            >
-              <motion.span
-                animate={{ rotate:[0,360] }}
-                transition={{ duration:8, repeat:Infinity, ease:'linear' }}
-                style={{ color:'#b09098', fontSize:8, marginTop:3, flexShrink:0, display:'block' }}>◆</motion.span>
-              {pt}
-            </motion.div>
-          ))}
+        <div>
+          <motion.p
+            initial={{ opacity:0, x:-8 }} animate={{ opacity:1, x:0 }}
+            transition={{ delay:.18 }}
+            style={{ fontSize:9, fontWeight:500, color:'#9a8878', letterSpacing:'.16em',
+              textTransform:'uppercase', marginBottom:8, fontFamily:"'Outfit',sans-serif",
+              display:'flex', alignItems:'center', gap:6 }}>
+            <span style={{ display:'inline-block', width:3, height:10, borderRadius:2,
+              background:'#b09098', flexShrink:0 }}/>
+            Key points
+          </motion.p>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+            {kp.map((pt,i) => (
+              <motion.div key={i} className="kchip"
+                initial={{ opacity:0, scale:.6, y:12 }}
+                animate={{ opacity:1, scale:1,  y:0  }}
+                transition={{ delay:.22+i*.08, type:'spring', stiffness:300, damping:18 }}
+              >
+                <motion.span
+                  animate={{ rotate:[0,360] }}
+                  transition={{ duration:8, repeat:Infinity, ease:'linear' }}
+                  style={{ color:'#b09098', fontSize:8, marginTop:3, flexShrink:0, display:'block' }}>◆</motion.span>
+                {pt}
+              </motion.div>
+            ))}
+          </div>
         </div>
       )}
 
       {/* action items */}
       {ai.length > 0 && (
-        <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-          {ai.map((a,i) => (
-            <motion.div key={i} className="aitem"
-              initial={{ opacity:0, x:-20, scale:.95 }}
-              animate={{ opacity:1, x:0,   scale:1   }}
-              transition={{ delay:.45+i*.09, type:'spring', stiffness:240, damping:22 }}
-            >
-              <motion.div
-                initial={{ scale:0, rotate:-30 }}
-                animate={{ scale:1, rotate:0   }}
-                transition={{ delay:.55+i*.09, type:'spring', stiffness:400, damping:16 }}
-                whileHover={{ rotate:15, scale:1.2 }}
-                style={{
-                  width:18, height:18, borderRadius:6, flexShrink:0, marginTop:1,
-                  background:'linear-gradient(135deg,#8aaa90,#6a9870)',
-                  display:'flex', alignItems:'center', justifyContent:'center',
-                  boxShadow:'0 3px 8px rgba(100,140,120,.3)',
-                  cursor:'default',
-                }}>
-                <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                  <path d="M1 4.5L3.5 7L8 2" stroke="white" strokeWidth="1.8"
-                    strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+        <div>
+          <motion.p
+            initial={{ opacity:0, x:-8 }} animate={{ opacity:1, x:0 }}
+            transition={{ delay:.4 }}
+            style={{ fontSize:9, fontWeight:500, color:'#9a8878', letterSpacing:'.16em',
+              textTransform:'uppercase', marginBottom:8, fontFamily:"'Outfit',sans-serif",
+              display:'flex', alignItems:'center', gap:6 }}>
+            <span style={{ display:'inline-block', width:3, height:10, borderRadius:2,
+              background:'#8aaa90', flexShrink:0 }}/>
+            Actions
+          </motion.p>
+          <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+            {ai.map((a,i) => (
+              <motion.div key={i} className="aitem"
+                initial={{ opacity:0, x:-20, scale:.95 }}
+                animate={{ opacity:1, x:0,   scale:1   }}
+                transition={{ delay:.45+i*.09, type:'spring', stiffness:240, damping:22 }}
+              >
+                <motion.div
+                  initial={{ scale:0, rotate:-30 }}
+                  animate={{ scale:1, rotate:0   }}
+                  transition={{ delay:.55+i*.09, type:'spring', stiffness:400, damping:16 }}
+                  whileHover={{ rotate:15, scale:1.2 }}
+                  style={{
+                    width:18, height:18, borderRadius:6, flexShrink:0, marginTop:1,
+                    background:'linear-gradient(135deg,#8aaa90,#6a9870)',
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    boxShadow:'0 3px 8px rgba(100,140,120,.3)',
+                    cursor:'default',
+                  }}>
+                  <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                    <path d="M1 4.5L3.5 7L8 2" stroke="white" strokeWidth="1.8"
+                      strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </motion.div>
+                <span style={{ fontSize:12, color:'#4a3c34', lineHeight:1.55,
+                  fontFamily:"'Outfit',sans-serif", fontWeight:300 }}>{a}</span>
               </motion.div>
-              <span style={{ fontSize:12, color:'#4a3c34', lineHeight:1.55,
-                fontFamily:"'Outfit',sans-serif", fontWeight:300 }}>{a}</span>
-            </motion.div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>
   )
 }
+
+const DEMO_NOTES = [
+  {
+    summary: "Had a productive standup — the team aligned on shipping the auth redesign by Friday. Backend is unblocked after the DB migration fix. Need to follow up with design on the onboarding flow before EOD.",
+    keyPoints: ["Auth redesign ships Friday", "DB migration unblocked backend", "Onboarding flow needs design sign-off"],
+    actionItems: ["Follow up with design on onboarding", "Review PR #142 before merge", "Update sprint board with new estimates"],
+    mood: "Focused", wordCount: 48,
+  },
+  {
+    summary: "Brainstorming session for the new mobile app. Three strong concepts emerged — a habit tracker with AI nudges, a voice journaling tool, and a collaborative recipe planner. The team is most excited about the habit tracker.",
+    keyPoints: ["Three product concepts explored", "Habit tracker with AI nudges is top pick", "Voice journaling ranked second"],
+    actionItems: ["Prototype habit tracker by next week", "Research competitor apps", "Schedule user interview sessions"],
+    mood: "Excited", wordCount: 52,
+  },
+  {
+    summary: "Quick personal note after the gym — feeling good about the new morning routine. Want to keep the 6am workouts consistent and prep meals on Sundays. Also reminded myself to call mum this weekend.",
+    keyPoints: ["Morning routine is working well", "6am workout consistency is the goal", "Sunday meal prep planned"],
+    actionItems: ["Call mum this weekend", "Buy meal prep containers", "Set 5:45am alarm for tomorrow"],
+    mood: "Casual", wordCount: 44,
+  },
+]
 
 export default function Home() {
   const [results,  setResults]  = useState(null)
@@ -489,6 +566,7 @@ export default function Home() {
   const [step,     setStep]     = useState(0)
   const [histOpen, setHistOpen] = useState(false)
   const [count,    setCount]    = useState(0)
+  const [demoIdx,  setDemoIdx]  = useState(0)
 
   const handleLoading = v => {
     setLoading(v)
@@ -499,6 +577,15 @@ export default function Home() {
     } else setTimeout(()=>setStep(0), 300)
   }
   const handleResults = d => { setResults(d); if(d) setCount(n=>n+1) }
+
+  const runDemo = () => {
+    const note = DEMO_NOTES[demoIdx % DEMO_NOTES.length]
+    setDemoIdx(i => i+1)
+    setResults(null); setLoading(true); setStep(1)
+    setTimeout(()=>setStep(2), 1100)
+    setTimeout(()=>setStep(3), 2200)
+    setTimeout(()=>{ setLoading(false); setResults(note); setStep(0) }, 3000)
+  }
 
   return (
     <>
@@ -554,6 +641,25 @@ export default function Home() {
               transition={{ delay:.5, duration:.6 }}>
               record · transcribe · summarise
             </motion.p>
+            <motion.div style={{ marginTop:18 }}
+              initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }}
+              transition={{ delay:.75, type:'spring', stiffness:260 }}>
+              <motion.button
+                className="vdemo-btn"
+                onClick={runDemo}
+                disabled={loading}
+                whileTap={{ scale:.94 }}
+                animate={{ y:[0,-3,0] }}
+                transition={{ duration:3.5, repeat:Infinity, ease:'easeInOut' }}
+              >
+                <motion.span
+                  animate={{ rotate:[0,15,-15,0] }}
+                  transition={{ duration:2, repeat:Infinity, repeatDelay:3 }}>
+                  ✨
+                </motion.span>
+                Try a demo note
+              </motion.button>
+            </motion.div>
           </motion.div>
 
           {/* RECORDER */}
@@ -613,11 +719,16 @@ export default function Home() {
                 exit={{ opacity:0, scale:.97 }}
                 transition={{ duration:.6, type:'spring', stiffness:150, damping:20 }}>
                 <div className="vresult-bar">
-                  <motion.span
-                    animate={{ opacity:[.6,1,.6] }}
-                    transition={{ duration:3, repeat:Infinity }}
-                    style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:14,
-                      fontStyle:'italic', color:'#9a8878' }}>note ✦</motion.span>
+                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <motion.span
+                      animate={{ opacity:[.6,1,.6] }}
+                      transition={{ duration:3, repeat:Infinity }}
+                      style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:14,
+                        fontStyle:'italic', color:'#9a8878' }}>note ✦</motion.span>
+                    {!results?.id && (
+                      <span className="vdemo-badge">✨ demo</span>
+                    )}
+                  </div>
                   <button className="vresult-link" onClick={()=>setHistOpen(true)}>all notes →</button>
                 </div>
                 <ResultCanvas data={results}/>
