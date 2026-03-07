@@ -97,12 +97,16 @@ const isQuota = err =>
   (err?.message||'').includes('RESOURCE_EXHAUSTED') ||
   (err?.status === 429);
 
-// Try multiple Groq models — each has independent rate limits
+const isDecommissioned = err =>
+  (err?.message||'').includes('decommissioned') ||
+  (err?.message||'').includes('model_decommissioned') ||
+  (err?.message||'').includes('no longer supported');
+
+// Active Groq models only — gemma2-9b-it was decommissioned March 2025
 const GROQ_MODELS = [
-  'gemma2-9b-it',         // Google Gemma — often has free quota
-  'llama-3.1-8b-instant', // Fast, high RPM
-  'llama3-8b-8192',       // Standard
-  'mixtral-8x7b-32768',   // Fallback
+  'llama-3.3-70b-versatile',  // Best quality, high RPM
+  'llama-3.1-8b-instant',     // Fast, high RPM fallback
+  'llama3-8b-8192',           // Standard fallback
 ];
 
 async function summarizeGroq(transcription) {
@@ -125,8 +129,8 @@ async function summarizeGroq(transcription) {
         return parsed;
       }
     } catch (err) {
-      if (isQuota(err)) {
-        console.warn(`${model} quota hit, trying next...`);
+      if (isQuota(err) || isDecommissioned(err)) {
+        console.warn(`${model} unavailable (${isDecommissioned(err)?'decommissioned':'quota'}), trying next...`);
         continue;
       }
       throw err;
@@ -148,7 +152,7 @@ async function summarizeGemini(transcription) {
 
 // Build a basic summary without any AI if everything is quota-limited
 function fallbackSummary(transcription) {
-  const words = transcription.trim().split(/\s+/);
+  const words     = transcription.trim().split(/\s+/);
   const sentences = transcription.split(/[.!?]+/).filter(s => s.trim().length > 10);
   return {
     summary:     sentences.slice(0,2).join('. ').trim() + '.' || transcription.slice(0,200),
