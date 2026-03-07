@@ -213,7 +213,7 @@ export default function ResultCard({ results }) {
   if (!results) return null
 
   const {
-    transcription,
+    transcription = '',
     keyPoints:   _kp,
     actionItems: _ai,
     summary, mood, wordCount, timestamp,
@@ -393,8 +393,8 @@ body{font-family:'Outfit',sans-serif;font-weight:300;background:#f0ebe4;color:#1
 
         <Divider/>
 
-        {/* transcript accordion */}
-        <div>
+        {/* transcript accordion — only shown when transcription exists */}
+        {transcription && <div>
           <button className="rc-tx-btn" onClick={()=>setTxOpen(v=>!v)}>
             <span>📄 Transcript</span>
             <motion.span animate={{ rotate:txOpen?180:0 }} transition={{ duration:.2 }}
@@ -424,7 +424,7 @@ body{font-family:'Outfit',sans-serif;font-weight:300;background:#f0ebe4;color:#1
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </div>}
 
         {/* action buttons */}
         <motion.div

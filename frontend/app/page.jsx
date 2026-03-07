@@ -410,6 +410,30 @@ function FloatingDots() {
 }
 
 
+const DEMO_NOTES = [
+  {
+    transcription: "Attended the machine learning lecture today. The professor went really deep into backpropagation and how gradient descent works. Then we moved on to convolutional neural networks — covered convolution, pooling, and activation functions. The exam is next Thursday and neural networks is the main topic. I also need to finish the linear regression assignment before Friday.",
+    summary: "Attended the machine learning lecture on neural networks today. The professor covered backpropagation in depth and introduced convolutional layers. Need to revise the gradient descent notes before the exam next Thursday and finish the assignment on linear regression.",
+    keyPoints: ["Backpropagation and gradient descent covered in depth", "CNNs introduced — convolution, pooling, activation functions", "Exam is next Thursday — neural networks is the main topic"],
+    actionItems: ["Revise gradient descent notes by Wednesday", "Complete linear regression assignment", "Watch 3Blue1Brown CNN explainer video", "Form study group with Priya and Arjun"],
+    mood: "Focused", wordCount: 54,
+  },
+  {
+    transcription: "Quick planning session for the Voca mobile app. We decided to go with React Native over Flutter because the whole team already knows JavaScript so iteration will be faster. The three core screens we need are the recorder, the summary view, and the history panel. We are targeting a working prototype in two weeks because I want to demo it during my internship presentation.",
+    summary: "Planning session for the Voca mobile app. Decided to go with React Native over Flutter for faster iteration since the team already knows JavaScript. The core screens are the recorder, summary view, and history. Target is a working prototype in two weeks for the internship demo.",
+    keyPoints: ["React Native chosen over Flutter — JS familiarity wins", "Three core screens: Recorder, Summary, History", "Two-week timeline targeting internship demo day"],
+    actionItems: ["Set up React Native project with Expo", "Wire up existing backend API to mobile", "Design low-fi mockups for all three screens", "Test audio recording on both iOS and Android"],
+    mood: "Professional", wordCount: 61,
+  },
+  {
+    transcription: "Okay lots to sort out this weekend. I need to renew my driving licence before it expires on the 15th, that is urgent. Also need to pick up my prescription from the pharmacy and call the landlord about that leaking tap in the bathroom. Oh and I really want to find time to catch up with Meera, we haven't spoken in weeks and I keep forgetting to text her.",
+    summary: "Lots to sort out this weekend. Need to renew the driving licence before it expires on the 15th, pick up the prescription from the pharmacy, and call the landlord about the leaking tap. Also want to find time to catch up with Meera — haven't spoken in weeks.",
+    keyPoints: ["Driving licence expires on the 15th — urgent", "Prescription ready at pharmacy for pickup", "Landlord needs to be contacted about the tap"],
+    actionItems: ["Book driving licence renewal appointment online", "Pick up prescription from pharmacy before 6pm", "Call landlord and report the leaking tap", "Text Meera and plan a catch-up call"],
+    mood: "Casual", wordCount: 58,
+  },
+]
+
 export default function Home() {
   const [results,  setResults]  = useState(null)
   const [loading,  setLoading]  = useState(false)
