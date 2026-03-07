@@ -1,22 +1,27 @@
+import { Cormorant_Garamond, Outfit } from 'next/font/google'
 import './globals.css'
 
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['300','400','500'],
+  style: ['normal','italic'],
+  variable: '--font-display',
+})
+const outfit = Outfit({
+  subsets: ['latin'],
+  weight: ['300','400','500'],
+  variable: '--font-body',
+})
+
 export const metadata = {
-  title: 'Voca — Voice Note Summarizer',
-  description: 'Speak your mind. Voca organises it into clear, structured notes.',
+  title: 'Voca',
+  description: 'AI voice note summarizer',
 }
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body suppressHydrationWarning={true}>{children}</body>
+    <html lang="en" className={`${cormorant.variable} ${outfit.variable}`}>
+      <body>{children}</body>
     </html>
   )
 }

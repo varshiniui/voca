@@ -4,116 +4,127 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Recorder from './components/Recorder'
 import HistoryPanel from './components/HistoryPanel'
 
-const MOODS = {
-  Focused:      ['#fce8e8','#c96b70'],
-  Excited:      ['#fef4e0','#c9973a'],
-  Casual:       ['#e8f4ec','#4a9e6e'],
-  Professional: ['#e8eef8','#4a6eb8'],
-  Urgent:       ['#fce8e8','#c94a4a'],
-  Reflective:   ['#f0eaf8','#8a5cb8'],
+/* ── mood palette ── */
+const MOOD = {
+  Focused:      { bg:'#fce8e8', fg:'#b84050', emoji:'🎯' },
+  Excited:      { bg:'#fef4d8', fg:'#b87020', emoji:'⚡' },
+  Casual:       { bg:'#e8f8ee', fg:'#2a8a58', emoji:'🌿' },
+  Professional: { bg:'#e8eef8', fg:'#3050a0', emoji:'💼' },
+  Urgent:       { bg:'#fce8e8', fg:'#b83030', emoji:'🔥' },
+  Reflective:   { bg:'#f0e8f8', fg:'#7840b0', emoji:'🌙' },
 }
-const moodStyle = m => MOODS[m] || ['#f0eaf8','#8a5cb8']
+const getMood = m => MOOD[m] || { bg:'#f0e8f8', fg:'#7840b0', emoji:'✦' }
 
-function Result({ data }) {
+/* ── result canvas ── */
+function ResultCanvas({ data }) {
   const kp = Array.isArray(data.keyPoints)   ? data.keyPoints   : []
-  const ai = Array.isArray(data.actionItems) ? data.actionItems.filter(a => !a.toLowerCase().includes('no specific')) : []
-  const [bg, accent] = moodStyle(data.mood)
+  const ai = Array.isArray(data.actionItems) ? data.actionItems.filter(a=>!a.toLowerCase().includes('no specific')) : []
+  const m  = getMood(data.mood)
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:11 }}>
-      {/* sticky note */}
+    <div style={{display:'flex',flexDirection:'column',gap:14}}>
+
+      {/* ── summary — rotated sticky note ── */}
       <motion.div
-        initial={{ opacity:0, rotate:-2.5, y:22, scale:0.97 }}
-        animate={{ opacity:1, rotate:-0.7, y:0,  scale:1   }}
-        transition={{ duration:0.6, type:'spring', stiffness:130 }}
+        initial={{opacity:0,rotate:-4,y:28,scale:.95}}
+        animate={{opacity:1,rotate:-1.2,y:0,scale:1}}
+        transition={{duration:.7,type:'spring',stiffness:120,damping:16}}
         style={{
-          background:'linear-gradient(155deg,#fffef5,#faf8e0)',
-          borderRadius:20, padding:'26px 22px 20px',
-          boxShadow:'3px 5px 24px rgba(200,180,100,0.2),0 1px 3px rgba(0,0,0,0.04)',
           position:'relative',
+          background:'linear-gradient(160deg, #fffef0 0%, #faf6d8 55%, #f5f0c0 100%)',
+          borderRadius:22,
+          padding:'28px 24px 22px',
+          boxShadow:'4px 6px 32px rgba(200,180,80,.22), 1px 2px 6px rgba(0,0,0,.05)',
         }}
       >
+        {/* tape */}
+        <div style={{position:'absolute',top:-9,left:'50%',transform:'translateX(-50%)',
+          width:54,height:18,borderRadius:4,
+          background:'rgba(245,220,100,.4)',backdropFilter:'blur(2px)'}}/>
+        {/* mood badge */}
         <div style={{
-          position:'absolute', top:-7, left:'50%', transform:'translateX(-50%)',
-          width:50, height:15, borderRadius:3,
-          background:'rgba(240,200,120,0.5)',
-        }}/>
-        {data.mood && (
-          <div style={{
-            display:'inline-flex', alignItems:'center', gap:4,
-            padding:'3px 10px', borderRadius:99, marginBottom:13,
-            background:bg, border:`1px solid ${accent}28`,
-            fontSize:10, fontWeight:600, color:accent,
-          }}>
-            {data.mood}
-          </div>
-        )}
+          position:'absolute',top:14,right:14,
+          display:'flex',alignItems:'center',gap:5,
+          padding:'4px 10px',borderRadius:99,
+          background:m.bg,border:`1.5px solid ${m.fg}20`,
+          fontSize:10.5,fontWeight:500,color:m.fg,
+          fontFamily:"'Outfit',sans-serif",letterSpacing:'.03em',
+        }}>
+          <span style={{fontSize:13}}>{m.emoji}</span> {data.mood}
+        </div>
         <p style={{
-          fontFamily:"'DM Serif Display',serif",
-          fontSize:'clamp(14px,3.6vw,16px)',
-          lineHeight:1.78, color:'#3a3010', fontStyle:'italic',
+          fontFamily:"'Cormorant Garamond',serif",
+          fontSize:'clamp(15px,3.8vw,17px)',
+          lineHeight:1.8,color:'#3a3010',
+          fontStyle:'italic',fontWeight:400,
+          paddingRight:80,marginTop:8,
         }}>{data.summary}</p>
-        {data.wordCount && (
-          <p style={{ fontSize:9.5, color:'#b8a020', marginTop:10, opacity:0.65 }}>
+        {data.wordCount&&(
+          <p style={{fontSize:9.5,color:'#b8a030',marginTop:10,opacity:.65,fontFamily:"'Outfit',sans-serif"}}>
             {data.wordCount} words
           </p>
         )}
       </motion.div>
 
-      {/* key points */}
-      {kp.length > 0 && (
-        <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
-          {kp.map((pt,i) => (
+      {/* ── key point chips ── */}
+      {kp.length>0&&(
+        <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+          {kp.map((pt,i)=>(
             <motion.div key={i}
-              initial={{ opacity:0, scale:0.82, y:8 }}
-              animate={{ opacity:1, scale:1,    y:0 }}
-              transition={{ delay:0.28+i*0.08, type:'spring', stiffness:260 }}
+              initial={{opacity:0,scale:.8,y:10}}
+              animate={{opacity:1,scale:1,y:0}}
+              transition={{delay:.25+i*.07,type:'spring',stiffness:280,damping:22}}
               style={{
-                padding:'8px 13px', borderRadius:13,
-                background:'rgba(255,255,255,0.8)',
-                border:'1.2px solid rgba(208,188,232,0.35)',
-                boxShadow:'0 2px 10px rgba(160,140,200,0.08)',
-                fontSize:11.5, color:'#4a3f60', lineHeight:1.5,
-                backdropFilter:'blur(8px)',
+                display:'flex',alignItems:'flex-start',gap:7,
+                padding:'8px 13px',borderRadius:16,
+                background:'rgba(255,255,255,.78)',
+                border:'1px solid rgba(220,196,242,.4)',
+                boxShadow:'0 3px 14px rgba(180,150,220,.1)',
+                fontSize:11.5,color:'#4a3a60',lineHeight:1.5,
+                backdropFilter:'blur(10px)',
+                fontFamily:"'Outfit',sans-serif",fontWeight:300,
               }}
             >
-              <span style={{ color:'#a87dd4', marginRight:5, fontSize:9 }}>◆</span>
+              <span style={{color:'#c4a0e8',fontSize:9,marginTop:2,flexShrink:0}}>◆</span>
               {pt}
             </motion.div>
           ))}
         </div>
       )}
 
-      {/* actions */}
-      {ai.length > 0 && (
-        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-          {ai.map((a,i) => (
+      {/* ── action checklist ── */}
+      {ai.length>0&&(
+        <div style={{display:'flex',flexDirection:'column',gap:7}}>
+          {ai.map((a,i)=>(
             <motion.div key={i}
-              initial={{ opacity:0, x:-14 }}
-              animate={{ opacity:1, x:0 }}
-              transition={{ delay:0.5+i*0.09, type:'spring', stiffness:200 }}
+              initial={{opacity:0,x:-18}}
+              animate={{opacity:1,x:0}}
+              transition={{delay:.5+i*.08,type:'spring',stiffness:220,damping:24}}
               style={{
-                display:'flex', alignItems:'flex-start', gap:9,
-                padding:'9px 13px', borderRadius:13,
-                background:'rgba(255,255,255,0.75)',
-                border:'1.2px solid rgba(184,212,200,0.45)',
-                backdropFilter:'blur(8px)',
+                display:'flex',alignItems:'flex-start',gap:10,
+                padding:'10px 14px',borderRadius:16,
+                background:'rgba(255,255,255,.72)',
+                border:'1px solid rgba(196,232,216,.5)',
+                backdropFilter:'blur(10px)',
               }}
             >
               <motion.div
-                initial={{ scale:0 }} animate={{ scale:1 }}
-                transition={{ delay:0.6+i*0.09, type:'spring', stiffness:400 }}
+                initial={{scale:0,rotate:-30}}
+                animate={{scale:1,rotate:0}}
+                transition={{delay:.62+i*.08,type:'spring',stiffness:400}}
                 style={{
-                  width:16, height:16, borderRadius:5, flexShrink:0, marginTop:1,
-                  background:'linear-gradient(135deg,#b8d4c8,#7ab09a)',
-                  display:'flex', alignItems:'center', justifyContent:'center',
+                  width:18,height:18,borderRadius:6,flexShrink:0,marginTop:1,
+                  background:'linear-gradient(135deg,#c4e8d8,#8ec8b0)',
+                  display:'flex',alignItems:'center',justifyContent:'center',
                 }}
               >
                 <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                  <path d="M1 4.5L3.5 7L8 2" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M1 4.5L3.5 7L8 2" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </motion.div>
-              <span style={{ fontSize:12, color:'#3a4a40', lineHeight:1.55 }}>{a}</span>
+              <span style={{fontSize:12,color:'#304840',lineHeight:1.55,fontFamily:"'Outfit',sans-serif",fontWeight:300}}>
+                {a}
+              </span>
             </motion.div>
           ))}
         </div>
@@ -122,6 +133,7 @@ function Result({ data }) {
   )
 }
 
+/* ── page ── */
 export default function Home() {
   const [results,  setResults]  = useState(null)
   const [loading,  setLoading]  = useState(false)
@@ -131,8 +143,7 @@ export default function Home() {
 
   const handleLoading = v => {
     setLoading(v)
-    if (v) {
-      setResults(null); setStep(1)
+    if(v){ setResults(null); setStep(1)
       setTimeout(()=>setStep(2),7000)
       setTimeout(()=>setStep(3),14000)
     } else setTimeout(()=>setStep(0),300)
@@ -142,50 +153,66 @@ export default function Home() {
   return (
     <>
       <style>{`
-        .page { min-height:100vh;background:var(--bg);position:relative;overflow-x:hidden; }
+        .pg { min-height:100vh; background:var(--paper); position:relative; overflow-x:hidden; }
 
-        /* blobs */
-        .blob { position:fixed;pointer-events:none;z-index:0;filter:blur(60px); }
-        .b1 { width:360px;height:360px;top:-100px;right:-80px;
-              background:rgba(232,180,184,0.3);
-              animation:blob-drift 12s ease-in-out infinite; }
-        .b2 { width:300px;height:300px;bottom:0;left:-80px;
-              background:rgba(208,188,232,0.22);
-              animation:blob-drift 15s ease-in-out infinite 4s reverse; }
-        .b3 { width:220px;height:220px;top:45%;right:-40px;
-              background:rgba(184,208,232,0.2);
-              animation:blob-drift 17s ease-in-out infinite 7s; }
-        .b4 { width:180px;height:180px;top:28%;left:3%;
-              background:rgba(184,212,200,0.18);
-              animation:blob-drift 11s ease-in-out infinite 2s; }
+        /* ink-wash blobs */
+        .blob { position:fixed; pointer-events:none; z-index:0; filter:blur(72px); opacity:.9; }
+        .b1 { width:420px;height:420px;top:-140px;right:-100px;
+              background:rgba(242,196,196,.32);
+              animation:ink-drift 14s ease-in-out infinite; }
+        .b2 { width:360px;height:360px;bottom:-80px;left:-100px;
+              background:rgba(220,196,242,.26);
+              animation:ink-drift 18s ease-in-out infinite 5s reverse; }
+        .b3 { width:260px;height:260px;top:40%;right:-60px;
+              background:rgba(196,216,242,.24);
+              animation:ink-drift 20s ease-in-out infinite 8s; }
+        .b4 { width:200px;height:200px;top:22%;left:2%;
+              background:rgba(196,232,216,.22);
+              animation:ink-drift 12s ease-in-out infinite 2s; }
+        .b5 { width:180px;height:180px;bottom:20%;right:8%;
+              background:rgba(242,224,176,.2);
+              animation:ink-drift 16s ease-in-out infinite 10s reverse; }
+
+        /* grain overlay */
+        .grain {
+          position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.025;
+          background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+          background-size:128px;
+        }
 
         /* nav */
         .nav {
           position:sticky;top:0;z-index:30;
           display:flex;align-items:center;justify-content:space-between;
-          padding:13px 22px;
-          background:rgba(247,243,240,0.82);
-          backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-          border-bottom:1px solid rgba(232,180,184,0.14);
+          padding:14px 24px;
+          background:rgba(253,248,244,.82);
+          backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+          border-bottom:1px solid rgba(242,196,196,.14);
         }
         .logo {
-          font-family:'DM Serif Display',serif;
-          font-style:italic;font-size:22px;color:#2d2228;letter-spacing:-0.01em;
+          font-family:'Cormorant Garamond',serif;
+          font-style:italic;font-size:24px;font-weight:400;
+          color:var(--ink);letter-spacing:-.01em;
         }
-        .nav-btn {
+        .logo span {
+          background:linear-gradient(125deg,#e8a0a8,#c0a0e0,#a0c0e8);
+          -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+        }
+        .notes-btn {
           display:flex;align-items:center;gap:6px;
-          padding:6px 15px;border-radius:99px;
-          background:rgba(255,255,255,0.85);
-          border:1.2px solid rgba(232,180,184,0.35);
-          font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:500;color:#6b5660;
-          cursor:pointer;transition:all .2s;backdrop-filter:blur(8px);
-          box-shadow:0 1px 8px rgba(200,160,168,0.1);
+          padding:7px 16px;border-radius:99px;
+          background:rgba(255,255,255,.8);
+          border:1px solid rgba(242,196,196,.32);
+          font-family:'Outfit',sans-serif;font-size:11.5px;font-weight:400;
+          color:var(--ink2);cursor:pointer;transition:all .2s;
+          backdrop-filter:blur(10px);
+          box-shadow:0 1px 10px rgba(200,160,168,.1);
         }
-        .nav-btn:hover { border-color:#d4878d;transform:translateY(-1px); }
-        .n-dot {
-          width:16px;height:16px;border-radius:50%;
-          background:linear-gradient(135deg,#e8b4b8,#d0bce8);
-          color:white;font-size:8px;font-weight:700;
+        .notes-btn:hover { border-color:#e8a8b0;transform:translateY(-1px);background:rgba(255,255,255,.96); }
+        .count-pip {
+          width:17px;height:17px;border-radius:50%;
+          background:linear-gradient(135deg,#f2c4c4,#dcc4f2);
+          color:white;font-size:8.5px;font-weight:600;
           display:inline-flex;align-items:center;justify-content:center;
         }
 
@@ -193,114 +220,127 @@ export default function Home() {
         .body {
           position:relative;z-index:1;
           max-width:520px;margin:0 auto;
-          padding:0 16px 90px;
+          padding:0 16px 100px;
           display:flex;flex-direction:column;gap:14px;
         }
 
-        /* hero — with decorative band */
-        .hero-band {
-          padding:28px 0 20px;
+        /* hero */
+        .hero {
+          padding:32px 0 18px;
           text-align:center;
           position:relative;
         }
-        .hero-band::before {
+        .hero::after {
           content:'';
-          position:absolute;
-          left:50%;transform:translateX(-50%);
-          bottom:0;width:48px;height:2px;border-radius:99px;
-          background:linear-gradient(90deg,#e8b4b8,#d0bce8);
-          opacity:0.6;
+          position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+          width:40px;height:1.5px;border-radius:99px;
+          background:linear-gradient(90deg,transparent,rgba(232,168,176,.5),transparent);
         }
-        .hero-band h1 {
-          font-family:'DM Serif Display',serif;
-          font-size:clamp(38px,10vw,58px);
-          line-height:1.06;color:#2d2228;
-          letter-spacing:-0.03em;
-          margin-bottom:6px;
+        .hero h1 {
+          font-family:'Cormorant Garamond',serif;
+          font-size:clamp(42px,11vw,62px);
+          line-height:1.04;
+          font-weight:300;
+          color:var(--ink);
+          letter-spacing:-.03em;
+          margin-bottom:7px;
         }
-        .hero-band h1 em { color:#c87080;font-style:italic; }
+        .hero h1 em {
+          font-style:italic;font-weight:400;
+          background:linear-gradient(125deg,#e8a0a8 0%,#c4a0e8 50%,#a0c0e8 100%);
+          -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+        }
         .hero-sub {
-          font-size:12.5px;color:#b8a0a8;
-          font-weight:300;font-style:italic;letter-spacing:0.02em;
+          font-family:'Outfit',sans-serif;
+          font-size:12px;color:var(--muted);font-weight:300;
+          letter-spacing:.12em;text-transform:uppercase;
         }
 
-        /* recorder card */
-        .rec-card {
-          background:rgba(255,255,255,0.68);
-          border:1.2px solid rgba(255,255,255,0.94);
-          border-radius:28px;
-          padding:clamp(20px,5vw,32px);
-          box-shadow:
-            0 6px 36px rgba(200,160,168,0.12),
-            0 1px 4px rgba(0,0,0,0.03),
-            inset 0 1px 0 rgba(255,255,255,0.96);
-          backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+        /* glass recorder card */
+        .rec-frame {
           position:relative;overflow:hidden;
+          background:rgba(255,252,250,.68);
+          border:1px solid rgba(255,255,255,.94);
+          border-radius:32px;
+          padding:clamp(22px,5vw,36px);
+          box-shadow:
+            0 8px 44px rgba(200,160,168,.12),
+            0 2px 8px rgba(0,0,0,.03),
+            inset 0 1px 0 rgba(255,255,255,.98);
+          backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
         }
-        .rec-card::before {
+        /* prismatic top line */
+        .rec-frame::before {
           content:'';position:absolute;top:0;left:0;right:0;height:2px;
-          background:linear-gradient(90deg,#e8b4b8,#d0bce8,#b8cfe8,#b8d4c8,#f0d4b8,#e8b4b8);
-          background-size:300% 100%;
-          animation:shimmer 6s linear infinite;
+          background:linear-gradient(90deg,
+            #f2c4c4,#f5d8c0,#f2e0b0,#c4e8d8,#c4d8f2,#dcc4f2,#f2c4c4);
+          background-size:400% 100%;
+          animation:shimmer-bar 8s linear infinite;
+        }
+        /* soft inner glow top */
+        .rec-frame::after {
+          content:'';position:absolute;top:0;left:10%;right:10%;height:60px;
+          background:radial-gradient(ellipse at top,rgba(242,196,196,.12) 0%,transparent 70%);
+          pointer-events:none;
         }
 
-        /* loading card */
-        .load-card {
-          background:rgba(255,255,255,0.65);
-          border:1.2px solid rgba(255,255,255,0.9);
-          border-radius:20px;padding:18px 20px;
-          box-shadow:0 3px 20px rgba(200,160,168,0.08);
-          backdrop-filter:blur(16px);
-        }
-
-        /* result card */
-        .result-card {
-          background:rgba(255,255,255,0.62);
-          border:1.2px solid rgba(255,255,255,0.9);
-          border-radius:24px;padding:20px;
-          box-shadow:0 6px 30px rgba(200,160,168,0.1),
-                     inset 0 1px 0 rgba(255,255,255,0.9);
+        /* processing */
+        .proc-card {
+          background:rgba(255,252,250,.65);
+          border:1px solid rgba(255,255,255,.9);
+          border-radius:22px;padding:18px 22px;
+          box-shadow:0 3px 22px rgba(200,160,168,.08);
           backdrop-filter:blur(18px);
         }
-        .result-bar {
-          display:flex;align-items:center;justify-content:space-between;
-          margin-bottom:15px;padding-bottom:12px;
-          border-bottom:1px solid rgba(232,180,184,0.18);
-        }
-        .see-all {
-          padding:4px 12px;border-radius:99px;
-          background:transparent;border:1px solid rgba(232,180,184,0.4);
-          font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;
-          color:#d4878d;cursor:pointer;transition:all .18s;
-        }
-        .see-all:hover { background:rgba(232,180,184,0.1); }
 
-        .footer-note {
-          text-align:center;font-size:11px;color:#c8b0b8;
-          font-weight:300;font-style:italic;padding-bottom:8px;
+        /* result canvas wrapper */
+        .result-wrap {
+          background:rgba(255,252,250,.62);
+          border:1px solid rgba(255,255,255,.92);
+          border-radius:28px;padding:22px;
+          box-shadow:0 8px 40px rgba(200,160,168,.1),
+                     inset 0 1px 0 rgba(255,255,255,.95);
+          backdrop-filter:blur(22px);
         }
+        .result-top {
+          display:flex;align-items:center;justify-content:space-between;
+          margin-bottom:16px;padding-bottom:13px;
+          border-bottom:1px solid rgba(242,196,196,.16);
+        }
+        .all-link {
+          padding:4px 12px;border-radius:99px;
+          background:transparent;border:1px solid rgba(242,196,196,.4);
+          font-family:'Outfit',sans-serif;font-size:11px;font-weight:400;
+          color:#c87080;cursor:pointer;transition:all .18s;
+        }
+        .all-link:hover { background:rgba(242,196,196,.12); }
+
+        .foot { text-align:center;font-size:11px;color:var(--faint);
+          font-style:italic;font-family:'Outfit',sans-serif;padding-bottom:4px; }
 
         @media(min-width:560px){
-          .nav  { padding:15px 32px; }
-          .body { padding:0 20px 90px;gap:16px; }
+          .nav  { padding:16px 36px; }
+          .body { padding:0 24px 100px;gap:16px; }
         }
       `}</style>
 
-      <div className="page">
-        <div className="blob b1"/><div className="blob b2"/>
-        <div className="blob b3"/><div className="blob b4"/>
+      <div className="pg">
+        <div className="blob b1"/><div className="blob b2"/><div className="blob b3"/>
+        <div className="blob b4"/><div className="blob b5"/>
+        <div className="grain"/>
 
+        {/* NAV */}
         <motion.nav className="nav"
-          initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.4 }}
-        >
-          <span className="logo">Voca</span>
-          <button className="nav-btn" onClick={() => setHistOpen(true)}>
+          initial={{opacity:0,y:-10}} animate={{opacity:1,y:0}} transition={{duration:.45}}>
+          <span className="logo">V<span>oca</span></span>
+          <button className="notes-btn" onClick={()=>setHistOpen(true)}>
             Notes
-            {count > 0 && (
-              <motion.span className="n-dot"
-                initial={{ scale:0 }} animate={{ scale:1 }}
-                transition={{ type:'spring', stiffness:500 }}
-              >{count}</motion.span>
+            {count>0&&(
+              <motion.span className="count-pip"
+                initial={{scale:0}} animate={{scale:1}}
+                transition={{type:'spring',stiffness:500,damping:20}}>
+                {count}
+              </motion.span>
             )}
           </button>
         </motion.nav>
@@ -308,57 +348,52 @@ export default function Home() {
         <div className="body">
 
           {/* HERO */}
-          <motion.div className="hero-band"
-            initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }}
-            transition={{ duration:0.55, delay:0.06 }}
-          >
-            <h1>Voice,<br/><em>captured.</em></h1>
+          <motion.div className="hero"
+            initial={{opacity:0,y:18}} animate={{opacity:1,y:0}}
+            transition={{duration:.6,delay:.06}}>
+            <h1>Voice,<br/><em>distilled.</em></h1>
             <p className="hero-sub">record · transcribe · summarise</p>
           </motion.div>
 
-          {/* RECORDER */}
-          <motion.div className="rec-card"
-            initial={{ opacity:0, y:22, scale:0.97 }}
-            animate={{ opacity:1, y:0,  scale:1 }}
-            transition={{ duration:0.55, delay:0.14, type:'spring', stiffness:160 }}
-          >
+          {/* RECORDER FRAME */}
+          <motion.div className="rec-frame"
+            initial={{opacity:0,y:24,scale:.97}}
+            animate={{opacity:1,y:0,scale:1}}
+            transition={{duration:.6,delay:.16,type:'spring',stiffness:150,damping:20}}>
             <Recorder onResults={handleResults} onLoading={handleLoading}/>
           </motion.div>
 
-          {/* LOADING */}
+          {/* PROCESSING */}
           <AnimatePresence>
-            {loading && (
-              <motion.div className="load-card"
-                initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }}
-                exit={{ opacity:0, y:-6 }} transition={{ duration:0.28 }}
-              >
-                <div style={{ display:'flex', alignItems:'center', gap:9, marginBottom:12 }}>
-                  <motion.div
-                    animate={{ rotate:360 }}
-                    transition={{ duration:1.2, repeat:Infinity, ease:'linear' }}
-                    style={{ width:13, height:13, borderRadius:'50', flexShrink:0,
-                      border:'2px solid rgba(232,180,184,0.2)', borderTop:'2px solid #d4878d' }}
-                  />
-                  <span style={{ fontSize:12.5, fontWeight:400, color:'#2d2228', fontStyle:'italic',
-                    fontFamily:"'DM Serif Display',serif" }}>
-                    Processing…
-                  </span>
+            {loading&&(
+              <motion.div className="proc-card"
+                initial={{opacity:0,y:12}} animate={{opacity:1,y:0}}
+                exit={{opacity:0,y:-8}} transition={{duration:.28}}>
+                <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:12}}>
+                  <motion.div animate={{rotate:360}} transition={{duration:1.2,repeat:Infinity,ease:'linear'}}
+                    style={{width:13,height:13,borderRadius:'50%',flexShrink:0,
+                      border:'1.8px solid rgba(242,196,196,.2)',borderTopColor:'#e8a8b0'}}/>
+                  <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:14,
+                    fontStyle:'italic',color:'var(--ink)'}}>Making magic…</span>
                 </div>
-                {['Transcribing','Understanding','Summarising'].map((label,i) => (
-                  <div key={i} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6,
-                    opacity:step===i+1?1:step>i+1?0.22:0.1, transition:'opacity 0.5s' }}>
-                    <div style={{ width:5, height:5, borderRadius:'50%', flexShrink:0, transition:'background 0.4s',
-                      background:step>i+1?'#e8b4b8':step===i+1?'#d4878d':'rgba(232,180,184,0.2)' }}/>
-                    <span style={{ fontSize:11.5, color:'#6b5660', fontWeight:step===i+1?500:300 }}>{label}</span>
+                {['Transcribing','Understanding','Composing'].map((label,i)=>(
+                  <div key={i} style={{display:'flex',alignItems:'center',gap:8,marginBottom:6,
+                    opacity:step===i+1?1:step>i+1?.2:.08,transition:'opacity .5s'}}>
+                    <motion.div
+                      animate={step===i+1?{scale:[1,1.7,1]}:{}}
+                      transition={{duration:.7,repeat:Infinity}}
+                      style={{width:4,height:4,borderRadius:'50%',flexShrink:0,transition:'background .4s',
+                        background:step>i+1?'#f2c4c4':step===i+1?'#e8a8b0':'rgba(242,196,196,.2)'}}/>
+                    <span style={{fontSize:11.5,color:'var(--ink2)',
+                      fontWeight:step===i+1?400:300,fontFamily:"'Outfit',sans-serif"}}>{label}</span>
                   </div>
                 ))}
-                <div style={{ height:2, background:'rgba(232,180,184,0.15)', borderRadius:99, marginTop:12, overflow:'hidden', position:'relative' }}>
-                  <motion.div
-                    style={{ position:'absolute', height:'100%', borderRadius:99, width:'30%',
-                      background:'linear-gradient(90deg,#e8b4b8,#d0bce8,#b8cfe8)' }}
-                    animate={{ left:['-30%','108%'] }}
-                    transition={{ duration:1.8, repeat:Infinity, ease:'easeInOut' }}
-                  />
+                <div style={{height:1.5,background:'rgba(242,196,196,.12)',borderRadius:99,
+                  marginTop:12,overflow:'hidden',position:'relative'}}>
+                  <motion.div style={{position:'absolute',height:'100%',borderRadius:99,width:'28%',
+                    background:'linear-gradient(90deg,#f2c4c4,#dcc4f2,#c4d8f2)'}}
+                    animate={{left:['-28%','108%']}}
+                    transition={{duration:1.9,repeat:Infinity,ease:'easeInOut'}}/>
                 </div>
               </motion.div>
             )}
@@ -366,35 +401,34 @@ export default function Home() {
 
           {/* RESULTS */}
           <AnimatePresence>
-            {results && !loading && (
-              <motion.div className="result-card"
-                initial={{ opacity:0, y:16, scale:0.97 }}
-                animate={{ opacity:1, y:0,  scale:1 }}
-                exit={{ opacity:0 }}
-                transition={{ duration:0.45, type:'spring', stiffness:180 }}
-              >
-                <div className="result-bar">
-                  <span style={{ fontSize:10, fontWeight:500, color:'#b8a0a8',
-                    letterSpacing:'0.1em', textTransform:'uppercase' }}>note</span>
-                  <button className="see-all" onClick={() => setHistOpen(true)}>all notes →</button>
+            {results&&!loading&&(
+              <motion.div className="result-wrap"
+                initial={{opacity:0,y:20,scale:.97}}
+                animate={{opacity:1,y:0,scale:1}}
+                exit={{opacity:0}}
+                transition={{duration:.5,type:'spring',stiffness:170,damping:22}}>
+                <div className="result-top">
+                  <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:14,
+                    fontStyle:'italic',color:'var(--muted)'}}>note</span>
+                  <button className="all-link" onClick={()=>setHistOpen(true)}>all notes →</button>
                 </div>
-                <Result data={results}/>
+                <ResultCanvas data={results}/>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {!results && !loading && (
-            <motion.p className="footer-note"
-              initial={{ opacity:0 }} animate={{ opacity:1 }}
-              transition={{ delay:1.3, duration:0.8 }}
-            >
+          {/* footer */}
+          {!results&&!loading&&(
+            <motion.p className="foot"
+              initial={{opacity:0}} animate={{opacity:1}}
+              transition={{delay:1.4,duration:.9}}>
               🔒 never stored
             </motion.p>
           )}
         </div>
       </div>
 
-      <HistoryPanel isOpen={histOpen} onClose={() => setHistOpen(false)}/>
+      <HistoryPanel isOpen={histOpen} onClose={()=>setHistOpen(false)}/>
     </>
   )
 }
