@@ -126,17 +126,6 @@ export default function PinModal({ onUnlock }) {
         headers: { 'x-device-id': getDeviceId() }
       })
       const data = await res.json()
-      // Also check if we have a stored pinHash that auto-unlocks
-      const storedHash = localStorage.getItem('voca_pin_hash')
-      if (data.registered && storedHash) {
-        // Try auto-unlock with stored hash
-        const verify = await fetch(`${API}/api/auth/status`, {
-          headers: { 'x-device-id': getDeviceId(), 'x-pin-hash': storedHash }
-        })
-        // If stored hash works just unlock silently
-        onUnlock({ deviceId: getDeviceId(), pinHash: storedHash })
-        return
-      }
       setMode(data.registered ? 'enter' : 'setup')
     } catch(e) {
       setMode('setup') // offline fallback
