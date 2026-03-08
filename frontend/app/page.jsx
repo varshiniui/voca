@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Recorder from './components/Recorder'
 import ResultCard from './components/ResultCard'
 import HistoryPanel from './components/HistoryPanel'
+import PinModal from './components/PinModal'
 
 const MOOD = {
   Focused:      { bg:'rgba(200,144,124,.14)', fg:'#a06050', emoji:'🎯' },
@@ -441,6 +442,7 @@ export default function Home() {
   const [histOpen, setHistOpen] = useState(false)
   const [count,    setCount]    = useState(0)
   const [demoIdx,  setDemoIdx]  = useState(0)
+  const [auth,     setAuth]     = useState(null) // { deviceId, pinHash }
 
   const handleLoading = v => {
     setLoading(v)
@@ -541,7 +543,7 @@ export default function Home() {
             initial={{ opacity:0, y:28, scale:.96, rotateX:6 }}
             animate={{ opacity:1, y:0,  scale:1,  rotateX:0 }}
             transition={{ duration:.7, delay:.2, type:'spring', stiffness:130, damping:18 }}>
-            <Recorder onResults={handleResults} onLoading={handleLoading}/>
+            <Recorder onResults={handleResults} onLoading={handleLoading} auth={auth}/>
           </motion.div>
 
           {/* PROCESSING */}
@@ -619,7 +621,8 @@ export default function Home() {
           )}
         </div>
       </div>
-      <HistoryPanel isOpen={histOpen} onClose={()=>setHistOpen(false)}/>
+      {!auth && <PinModal onUnlock={setAuth}/>}
+      <HistoryPanel isOpen={histOpen} onClose={()=>setHistOpen(false)} auth={auth}/>
     </>
   )
 }

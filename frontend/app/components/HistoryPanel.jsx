@@ -366,7 +366,7 @@ function NoteCard({ note, onDelete, index }) {
   )
 }
 
-export default function HistoryPanel({ isOpen, onClose }) {
+export default function HistoryPanel({ isOpen, onClose, auth }) {
   const [notes,    setNotes]    = useState([])
   const [loading,  setLoading]  = useState(false)
   const [clearing, setClearing] = useState(false)
@@ -377,7 +377,7 @@ export default function HistoryPanel({ isOpen, onClose }) {
     setLoading(true)
     try {
       const url  = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'
-      const res  = await fetch(`${url}/api/notes`)
+      const res  = await fetch(`${url}/api/notes`, { headers: auth ? {'x-device-id':auth.deviceId,'x-pin-hash':auth.pinHash} : {} })
       const data = await res.json()
       if (data.success) setNotes(data.notes)
     } catch(e) { console.error(e) }

@@ -237,7 +237,7 @@ const RS = `
   .rw-bar { border-radius:99px;transition:height .06s ease; }
 `
 
-export default function Recorder({ onResults, onLoading }) {
+export default function Recorder({ onResults, onLoading, auth }) {
   const [stage,      setStage]      = useState('idle')
   const [language,   setLanguage]   = useState(LANGUAGES[0])
   const [langOpen,   setLangOpen]   = useState(false)
@@ -313,7 +313,7 @@ export default function Recorder({ onResults, onLoading }) {
     onLoading(true); onResults(null); setError(null); setStage('transcribing')
     try {
       const url=process.env.NEXT_PUBLIC_BACKEND_URL||'http://localhost:5000'
-      const res=await fetch(`${url}/api/summarize`,{method:'POST',body:buildFD()})
+      const res=await fetch(`${url}/api/summarize`,{method:'POST',body:buildFD(),headers:auth?{'x-device-id':auth.deviceId,'x-pin-hash':auth.pinHash}:{}})
       const d=await res.json()
       if(!res.ok) throw new Error(d.error||'Failed')
       onResults(d); setStage('idle')
@@ -326,31 +326,25 @@ export default function Recorder({ onResults, onLoading }) {
     setError(null); setStage('transcribing')
     try {
       const url=process.env.NEXT_PUBLIC_BACKEND_URL||'http://localhost:5000'
-      const res=await fetch(`${url}/api/transcribe`,{method:'POST',body:buildFD()})
+      const res=await fetch(`${url}/api/transcribe`,{method:'POST',body:buildFD(),headers:auth?{'x-device-id':auth.deviceId,'x-pin-hash':auth.pinHash}:{}})
       const d=await res.json()
       if(!res.ok) throw new Error(d.error||'Failed')
       setTranscript(d.transcription); setStage('editing')
     } catch(err){ setError(friendlyError(err)); setStage('preview') }
   }
-const doSummarize = async () => {
-  if (!transcript.trim()) return
-  onLoading(true); onResults(null); setError(null)
-  try {
-    const url = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'
-    const res = await fetch(`${url}/api/summarize-text`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ transcription: transcript, language: language.code })
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Failed')
-    onResults(data)
-  } catch (err) {
-    setError(friendlyError(err)); onResults(null)
-  } finally {
-    onLoading(false)
+
+  const doSummarize = async()=>{
+    if(!transcript.trim()) return
+    onLoading(true); onResults(null); setError(null)
+    try {
+      const url=process.env.NEXT_PUBLIC_BACKEND_URL||'http://localhost:5000'
+      const res=await fetch(`${url}/api/summarize`,{method:'POST',body:buildFD(),headers:auth?{'x-device-id':auth.deviceId,'x-pin-hash':auth.pinHash}:{}})
+      const d=await res.json()
+      if(!res.ok) throw new Error(d.error||'Failed')
+      onResults(d)
+    } catch(err){ setError(friendlyError(err)); onResults(null) }
+    finally{ onLoading(false) }
   }
-}
 
   const reset = ()=>{
     setStage('idle'); setAudioBlob(null)
