@@ -70,11 +70,12 @@ const PAGE_CSS = `
 
   /* blobs */
   .vb { position:fixed; pointer-events:none; z-index:0; filter:blur(80px); }
-  .vb1 { width:480px;height:480px;top:-160px;right:-120px;background:rgba(200,144,124,.22);animation:ink-morph 16s ease-in-out infinite; }
-  .vb2 { width:380px;height:380px;bottom:-100px;left:-100px;background:rgba(176,144,154,.18);animation:ink-morph 20s ease-in-out infinite 6s reverse; }
-  .vb3 { width:300px;height:300px;top:38%;right:-70px;background:rgba(138,168,192,.16);animation:ink-morph 24s ease-in-out infinite 10s; }
-  .vb4 { width:240px;height:240px;top:18%;left:0;background:rgba(138,170,144,.14);animation:ink-morph 14s ease-in-out infinite 3s; }
-  .vb5 { width:200px;height:200px;bottom:18%;right:6%;background:rgba(200,160,96,.13);animation:ink-morph 18s ease-in-out infinite 12s reverse; }
+  .vb1 { width:480px;height:480px;top:-160px;right:-120px;background:rgba(200,144,124,.22);animation:ink-morph 16s ease-in-out infinite;will-change:border-radius;transform:translateZ(0); }
+  .vb2 { width:380px;height:380px;bottom:-100px;left:-100px;background:rgba(176,144,154,.18);animation:ink-morph 20s ease-in-out infinite 6s reverse;will-change:border-radius;transform:translateZ(0); }
+  .vb3 { width:300px;height:300px;top:38%;right:-70px;background:rgba(138,168,192,.16);animation:ink-morph 24s ease-in-out infinite 10s;will-change:border-radius;transform:translateZ(0); }
+  .vb4 { width:240px;height:240px;top:18%;left:0;background:rgba(138,170,144,.14);animation:ink-morph 14s ease-in-out infinite 3s;will-change:border-radius;transform:translateZ(0); }
+  .vb5 { width:200px;height:200px;bottom:18%;right:6%;background:rgba(200,160,96,.13);animation:ink-morph 18s ease-in-out infinite 12s reverse;will-change:border-radius;transform:translateZ(0); }
+  @media(max-width:768px){.vb1,.vb2,.vb3,.vb4,.vb5{animation:none;}}
 
   /* grain */
   .vgrain {
@@ -84,9 +85,11 @@ const PAGE_CSS = `
   }
 
   /* floating decorative dots */
+  @media(max-width:768px){.vdot{display:none;}}
   .deco-dot {
     position:fixed;pointer-events:none;z-index:0;border-radius:50%;
     animation:float-gentle var(--dur,8s) ease-in-out infinite var(--delay,0s);
+    will-change:transform;transform:translateZ(0);
   }
 
   /* nav */

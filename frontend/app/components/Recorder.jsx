@@ -34,6 +34,7 @@ const RS = `
   @keyframes rs-wobble  { 0%,100%{transform:rotate(0);}   25%{transform:rotate(-4deg);} 75%{transform:rotate(4deg);} }
   @keyframes rs-pulse-ring { 0%{transform:scale(1);opacity:.5;} 100%{transform:scale(2.4);opacity:0;} }
   @keyframes rs-float   { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-5px);} }
+  @keyframes rs-float-none { }
 
   /* orb shell */
   .ro-shell {
@@ -101,7 +102,8 @@ const RS = `
   }
 
   /* idle float animation */
-  .ro-idle-wrap { animation:rs-float 4s ease-in-out infinite; }
+  .ro-idle-wrap { animation:rs-float 4s ease-in-out infinite; will-change:transform; transform:translateZ(0); }
+  @media(max-width:768px){ .ro-idle-wrap { animation:none; } }
 
   /* lang picker */
   .rl-chip {
