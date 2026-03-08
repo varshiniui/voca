@@ -116,7 +116,7 @@ app.get('/api/auth/status', async (req, res) => {
 // Register a new PIN for a device
 app.post('/api/auth/register', async (req, res) => {
   const { deviceId, pin } = req.body
-  if (!deviceId || !pin || pin.length !== 4 || !/^\d{4}$/.test(pin))
+  if (!deviceId || !pin || pin.length !== 6 || !/^\d{6}$/.test(pin))
     return res.status(400).json({ error: 'Invalid PIN — must be 4 digits' })
   try {
     // Check not already registered
@@ -145,7 +145,7 @@ app.post('/api/auth/verify', async (req, res) => {
 // Change PIN
 app.post('/api/auth/change-pin', async (req, res) => {
   const { deviceId, oldPin, newPin } = req.body
-  if (!deviceId || !oldPin || !newPin || !/^\d{4}$/.test(newPin))
+  if (!deviceId || !oldPin || !newPin || !/^\d{6}$/.test(newPin))
     return res.status(400).json({ error: 'Invalid request' })
   try {
     const r = await pool.query('SELECT pin_hash FROM users WHERE device_id=$1', [deviceId])

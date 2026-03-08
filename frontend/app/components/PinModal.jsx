@@ -140,7 +140,7 @@ export default function PinModal({ onUnlock }) {
   const pressKey = (k) => {
     setError('')
     const current = mode === 'setup' && step === 'confirm' ? confirm : pin
-    if (current.length >= 4) return
+    if (current.length >= 6) return
     if (mode === 'setup' && step === 'confirm') setConfirm(c => c + k)
     else setPin(p => p + k)
   }
@@ -154,7 +154,7 @@ export default function PinModal({ onUnlock }) {
   // Auto-submit when 4 digits entered
   useEffect(() => {
     const current = mode === 'setup' && step === 'confirm' ? confirm : pin
-    if (current.length === 4) {
+    if (current.length === 6) {
       setTimeout(() => handleSubmit(current), 120)
     }
   }, [pin, confirm])
@@ -223,7 +223,7 @@ export default function PinModal({ onUnlock }) {
     ? (step === 'pin' ? 'Set your PIN' : 'Confirm PIN')
     : 'Enter your PIN'
   const subtitle    = mode === 'setup'
-    ? (step === 'pin' ? 'Choose a 4-digit PIN to protect your notes' : 'Re-enter your PIN to confirm')
+    ? (step === 'pin' ? 'Choose a 6-digit PIN to protect your notes' : 'Re-enter your PIN to confirm')
     : 'Your notes are waiting ✦'
 
   return (
@@ -243,7 +243,7 @@ export default function PinModal({ onUnlock }) {
 
           {/* PIN dots */}
           <div className={`pm-dots${shake?' shake':''}`}>
-            {[0,1,2,3].map(i => (
+            {[0,1,2,3,4,5].map(i => (
               <motion.div key={i} className={`pm-dot${i < currentPin.length?' filled':''}`}
                 animate={i < currentPin.length ? { scale:[1,1.2,1] } : {}}
                 transition={{ duration:.2 }}/>
